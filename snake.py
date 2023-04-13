@@ -1,5 +1,6 @@
 import pygame
 import random
+import time
 
 ## Global Variables
 
@@ -121,18 +122,18 @@ def Grow(snake, direction):
     elif direction == "down":
         snake.body.append(pygame.draw.rect(screen, BLACK, pygame.Rect(snake.x, snake.y + 20, blockSize, blockSize)))
 
-def MoveSnake(direction, snake, grow):
+def MoveSnake(direction, snake, grow, lastDirection):
 
     # If the snake went over a fruit.
     if grow:
         if direction == "left":
-            snake.body.append(pygame.draw.rect(screen, BLACK, pygame.Rect(snake.x - 20, snake.y, blockSize, blockSize)))
+            snake.body.append(pygame.Rect(screen, BLACK, snake.draw()))
         elif direction == "right":
-            snake.body.append(pygame.draw.rect(screen, BLACK, pygame.Rect(snake.x + 20, snake.y, blockSize, blockSize)))
+            snake.body.append(pygame.Rect(screen, BLACK, snake.draw()))
         elif direction == "up":
-            snake.body.append(pygame.draw.rect(screen, BLACK, pygame.Rect(snake.x, snake.y - 20, blockSize, blockSize)))
+            snake.body.append(pygame.Rect(screen, BLACK, snake.draw()))
         elif direction == "down":
-            snake.body.append(pygame.draw.rect(screen, BLACK, pygame.Rect(snake.x, snake.y + 20, blockSize, blockSize)))
+            snake.body.append(pygame.Rect(screen, BLACK, snake.draw()))
         grow = False
 
 
@@ -155,29 +156,46 @@ def MoveSnake(direction, snake, grow):
 
     pygame.draw.rect(screen, BLACK, snake.draw())
 
-    i = 0
-    if len(snake.body) > 1:
+    for part in snake.body:
+        pygame.draw.rect(screen, pygame.Color(GRASS), part)
+        pygame.draw.rect(screen, BLACK, part, 1)
 
-        for part in snake.body:
-
-            pygame.draw.rect(screen, pygame.Color(GRASS), part)
-            pygame.draw.rect(screen, BLACK, part, 1)
-            if direction == "left":
-                if snake.x > 20:
-                    part.x = snake.body[i].x - 20
-            elif direction == "right":
-                if snake.x < 850:
-                    part.x + snake.body[i].x + 20
-            elif direction == "up":
+        if direction != lastDirection:
+            print("i ran")
+            if lastDirection == "left":
+                if part.x > 20:
+                    part.x = snake.x
+            elif lastDirection == "right":
+                if part.x < 850:
+                    part.x = snake.x
+            elif lastDirection == "up":
                 if snake.y > 20:
-                    part.y = snake.body[i].y - 20
-            elif direction == "down":
+                    part.y = snake.y
+            elif lastDirection == "down":
                 if snake.y < 700:
-                    part.y = snake.body[i].y + 20
+                    part.y = snake.y
 
-            pygame.draw.rect(screen, BLACK, part)
+        if direction == "left":
+            if part.x > 20:
+                part.x = snake.x + 20
+        elif direction == "right":
+            if part.x < 850:
+                part.x = snake.x - 20
+        elif direction == "up":
+            if snake.y > 20:
+                part.y = snake.y + 20
+        elif direction == "down":
+            if snake.y < 700:
+                part.y = snake.y - 20
 
-            i += 1
+        pygame.draw.rect(screen, BLACK, part)
+
+        print("Head x: {}".format(snake.x))
+        print("Body x: {}".format(snake.body[0].x))
+        print("Head y: {}".format(snake.y))
+        print("Body y: {}".format(snake.body[0].y))
+        print()
+        time.sleep(1)
 
         # print(part.x)
         # print(snake.body)
@@ -212,12 +230,13 @@ def SnakeGame():
     # Keep track of what direction and when the snake should move.
     clock = pygame.time.Clock()
     lastMove = "left"
+    lastDirection = ""
 
     # Drawing the grid.
     DrawGrid(screen)
 
     # Draws the grid for the game, the initial snake and the fruit.
-    snake = Snake(width / 2 - 30, height / 2 - 60, [pygame.Rect(width / 2 - 30, height / 2 - 60, blockSize, blockSize)], 1)
+    snake = Snake(width / 2 - 30, height / 2 - 60, [], 1)
     pygame.draw.rect(screen, BLACK, snake.draw())
     fruit = Fruit()
 
@@ -234,8 +253,7 @@ def SnakeGame():
 
         pygame.display.update()
         
-        # Debugging.
-        # print(pygame.mouse.get_pos())
+        lastDirection = lastMove
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
@@ -285,7 +303,7 @@ def SnakeGame():
 
         # This moves the snake at a certain time interval.
         if clock.tick(6):
-            MoveSnake(lastMove, snake, grow)
+            MoveSnake(lastMove, snake, grow, lastDirection)
             grow = False
             pygame.display.update()
     
