@@ -138,23 +138,27 @@ def MoveSnake(direction, snake, grow):
     pygame.draw.rect(screen, BLACK, snake.draw())
 
     # Moves the body of the snake.
-    for parts in snake.body:
+    # Problem is that snake's body isn't changing. so it's position is the same as the head.
+
+    for part in snake.body:
         if direction == "left":
-            if parts.x > 20:
-                parts.x -= 20
+            if part.x > 20:
+                part.x -= 20
         elif direction == "right":
-            if parts.x < 850:
-                parts.x += 20
+            if part.x < 850:
+                part.x += 20
         elif direction == "up":
-            if parts.y > 20:
-                parts.y -= 20
+            if part.y > 20:
+                part.y -= 20
         elif direction == "down":
-            if parts.y < 700:
-                parts.y += 20
-        
-        pygame.draw.rect(screen, BLACK, parts)
-                
-        # print(snake.body)
+            if part.y < 700:
+                part.y += 20
+
+        pygame.draw.rect(screen, BLACK, part)
+
+        print(part.x)
+        print(snake.x)
+        exit()
     # Draws where the snake moves.
     # pygame.draw.rect(screen, BLACK, snake.draw())
     # print(snake.body)
