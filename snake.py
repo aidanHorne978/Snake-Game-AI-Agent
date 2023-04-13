@@ -32,9 +32,10 @@ center = screen.get_rect().center
 
 class Snake:
 
-    def __init__(self, x, y, size):
+    def __init__(self, x, y, body, size):
         self.x = x
         self.y = y
+        self.body = body
         self.size = size
 
     def pos(self):
@@ -117,10 +118,10 @@ def MoveSnake(direction, snake, grow):
     pygame.draw.rect(screen, BLACK, snake.draw(), 1)
 
     if grow:
-        pygame.draw.rect(screen, BLACK, snake.draw())
+        snake.body.append(pygame.draw.rect(screen, BLACK, snake.draw()))
         grow = False
-        print(grow)
 
+    # Moves the head of the snake.
     if direction == "left":
         if snake.x > 20:
             snake.x -= 20
@@ -133,15 +134,30 @@ def MoveSnake(direction, snake, grow):
     elif direction == "down":
         if snake.y < 700:
             snake.y += 20
-    
-    # Draws where the snake moves.
+
     pygame.draw.rect(screen, BLACK, snake.draw())
 
-def Grow(snake, x, y):
-    snake.size += 1
-
-    # return this into a body list and then loop through that to move the snake.
-    pygame.draw.rect(screen, BLACK, pygame.Rect(x, y, blockSize, blockSize))
+    # Moves the body of the snake.
+    for parts in snake.body:
+        if direction == "left":
+            if parts.x > 20:
+                parts.x -= 20
+        elif direction == "right":
+            if parts.x < 850:
+                parts.x += 20
+        elif direction == "up":
+            if parts.y > 20:
+                parts.y -= 20
+        elif direction == "down":
+            if parts.y < 700:
+                parts.y += 20
+        
+        pygame.draw.rect(screen, BLACK, parts)
+                
+        # print(snake.body)
+    # Draws where the snake moves.
+    # pygame.draw.rect(screen, BLACK, snake.draw())
+    # print(snake.body)
 
 def Fruit():
 
@@ -174,7 +190,7 @@ def SnakeGame():
     DrawGrid(screen)
 
     # Draws the grid for the game, the initial snake and the fruit.
-    snake = Snake(width / 2 - 30, height / 2 - 60, 1)
+    snake = Snake(width / 2 - 30, height / 2 - 60, [], 1)
     pygame.draw.rect(screen, BLACK, snake.draw())
     fruit = Fruit()
 
