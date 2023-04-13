@@ -32,20 +32,16 @@ center = screen.get_rect().center
 
 class Snake:
 
-    def __init__(self, x, y, body, size):
+    def __init__(self, x, y, size):
         self.x = x
         self.y = y
-        self.body = body
         self.size = size
 
     def pos(self):
         return self.x, self.y
 
-    def grow(self, body):
-        body.append(pygame.Rect(self.x, self.y, blockSize, blockSize))
-
     def draw(self):
-        pygame.draw.rect(screen, BLACK, self.body)
+        return pygame.Rect(self.x, self.y, blockSize, blockSize)
     
 def MainMenu():
 
@@ -114,11 +110,16 @@ def DrawGrid(screen):
             pygame.draw.rect(screen, pygame.Color(GRASS), rect)
             pygame.draw.rect(screen, BLACK, rect, 1)
 
-def MoveSnake(direction, snake):
+def MoveSnake(direction, snake, grow):
 
-    rect = pygame.Rect(snake.x, snake.y, blockSize, blockSize)
-    pygame.draw.rect(screen, pygame.Color(GRASS), rect)
-    pygame.draw.rect(screen, BLACK, rect, 1)
+    # Draw's the background and grid back.
+    pygame.draw.rect(screen, pygame.Color(GRASS), snake.draw())
+    pygame.draw.rect(screen, BLACK, snake.draw(), 1)
+
+    if grow:
+        pygame.draw.rect(screen, BLACK, snake.draw())
+        grow = False
+        print(grow)
 
     if direction == "left":
         if snake.x > 20:
@@ -133,17 +134,26 @@ def MoveSnake(direction, snake):
         if snake.y < 700:
             snake.y += 20
     
-    rect = pygame.Rect(snake.x, snake.y, blockSize, blockSize)
-    pygame.draw.rect(screen, BLACK, rect)
+    # Draws where the snake moves.
+    pygame.draw.rect(screen, BLACK, snake.draw())
+
+def Grow(snake, x, y):
+    snake.size += 1
+
+    # return this into a body list and then loop through that to move the snake.
+    pygame.draw.rect(screen, BLACK, pygame.Rect(x, y, blockSize, blockSize))
 
 def Fruit():
 
+    # Range is so it fits in the grid of the game.
     x = random.randrange(20, 860, 20)
     y = random.randrange(20, 700, 20)
 
+    # Draw's the fruit on the grid.
     rect = pygame.Rect(x, y, blockSize, blockSize)
     pygame.draw.rect(screen, RED, rect)
 
+    # Returns the position of the fruit.
     return x, y
 
 def SnakeGame():
@@ -156,8 +166,6 @@ def SnakeGame():
     screen.fill(background_colour)
     pygame.display.flip()
 
-    grow = False
-
     # Keep track of what direction and when the snake should move.
     clock = pygame.time.Clock()
     lastMove = "left"
@@ -166,9 +174,11 @@ def SnakeGame():
     DrawGrid(screen)
 
     # Draws the grid for the game, the initial snake and the fruit.
-    snake = Snake(width / 2 - 30, height / 2 - 60, pygame.Rect(width / 2 - 30, height / 2 - 60, blockSize, blockSize), 1)
-    snake.draw()
+    snake = Snake(width / 2 - 30, height / 2 - 60, 1)
+    pygame.draw.rect(screen, BLACK, snake.draw())
     fruit = Fruit()
+
+    grow = False
 
     # Score variable.
     score = 0
@@ -204,19 +214,19 @@ def SnakeGame():
                 if event.key == pygame.K_DOWN or event.key == pygame.K_s:
                     if lastMove != "up":
                         lastMove = "down"
-        
-        # print(snake.x)
-        # print(fruit[0])
 
         # When you get a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
         if snake.x == fruit[0] and snake.y == fruit[1]:
-            # rect = pygame.Rect(snake[0].x, snake[0].y, blockSize, blockSize)
-            # pygame.draw.rect(screen, pygame.Color(BLACK), rect)
+
+            # Generate a new fruit.
             fruit = Fruit()
+
+            # Increase score by one.
             score += 1
-            snake.grow()
-            MoveSnake(lastMove, snake)
+
+            # Change grow to True.
+            grow = True
 
             # Erase the old score and put in the new score.
             scoreValue = smallfont.render(str(score), True, BLACK)
@@ -225,7 +235,8 @@ def SnakeGame():
 
         # This moves the snake at a certain time interval.
         if clock.tick(6):
-            MoveSnake(lastMove, snake)
+            MoveSnake(lastMove, snake, grow)
+            grow = False
             pygame.display.update()
     
 # Runs the main menu.
