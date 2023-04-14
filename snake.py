@@ -112,15 +112,15 @@ def DrawGrid(screen):
             pygame.draw.rect(screen, pygame.Color(GRASS), rect)
             pygame.draw.rect(screen, BLACK, rect, 1)
 
-def Grow(snake, direction):
+def Grow(snake, direction, x, y):
     if direction == "left":
-        snake.body.append(pygame.draw.rect(screen, BLACK, pygame.Rect(snake.x, snake.y, blockSize, blockSize)))
-    elif direction == "right":
-        snake.body.append(pygame.draw.rect(screen, BLACK, pygame.Rect(snake.x, snake.y, blockSize, blockSize)))
-    elif direction == "up":
-        snake.body.append(pygame.draw.rect(screen, BLACK, pygame.Rect(snake.x, snake.y, blockSize, blockSize)))
-    elif direction == "down":
-        snake.body.append(pygame.draw.rect(screen, BLACK, pygame.Rect(snake.x, snake.y, blockSize, blockSize)))
+        snake.body.append(pygame.Rect(x, y, blockSize, blockSize))
+    if direction == "right":
+        snake.body.append(pygame.Rect(x, y, blockSize, blockSize))
+    if direction == "up":
+        snake.body.append(pygame.Rect(x, y, blockSize, blockSize))
+    if direction == "down":
+        snake.body.append(pygame.Rect(x, y, blockSize, blockSize))
 
 def MoveSnake(direction, snake, lastDirection):
 
@@ -128,6 +128,7 @@ def MoveSnake(direction, snake, lastDirection):
     pygame.draw.rect(screen, pygame.Color(GRASS), snake.draw())
     pygame.draw.rect(screen, BLACK, snake.draw(), 1)
 
+    # Moves the head of the snake.
     if direction == "left":
         if snake.x > 20:
             snake.x -= 20
@@ -143,74 +144,23 @@ def MoveSnake(direction, snake, lastDirection):
 
     pygame.draw.rect(screen, BLACK, snake.draw())
 
-    i = 1
-    for part in snake.body:
-        pygame.draw.rect(screen, pygame.Color(GRASS), part)
-        pygame.draw.rect(screen, BLACK, part, 1)
+    # The head is at position 0 in the boy list so update that value.
 
-        # For when the snake changes direction.
-        # This makes sure the snake flows properly and goes to the space it's segement before
-        # Was on before changing direction.
-        if direction != lastDirection:
-            if lastDirection == "left":
-                if part.x > 20:
-                    if len(snake.body) <= 1:
-                        part.x = snake.x
-                    else:
-                        part.x = snake.body[i].x
-            elif lastDirection == "right":
-                if part.x < 850:
-                    if len(snake.body) <= 1:
-                        part.x = snake.x
-                    else:
-                        part.x = snake.body[i].x
-            elif lastDirection == "up":
-                if snake.y > 20:
-                    if len(snake.body) <= 1:
-                        part.y = snake.y
-                    else:
-                        part.y = snake.body[i].y
-            elif lastDirection == "down":
-                if snake.y < 700:
-                    if len(snake.body) <= 1:
-                        part.y = snake.y
-                    else:
-                        part.y = snake.body[i].y
+    # Code for the body.
+    if len(snake.body) > 1:
+        for j in range(1, len(snake.body)):
+            pygame.draw.rect(screen, pygame.Color(GRASS), snake.body[-1])
+            pygame.draw.rect(screen, BLACK, snake.body[-1], 1)
 
-        # Changes directions of the segments of the body.
-        if direction == "left":
-            if part.x > 20:
-                part.x = snake.x + 20 * i
-        elif direction == "right":
-            if part.x < 850:
-                part.x = snake.x - 20 * i
-        elif direction == "up":
-            if snake.y > 20:
-                part.y = snake.y + 20 * i
-        elif direction == "down":
-            if snake.y < 700:
-                part.y = snake.y - 20 * i
+            snake.body[j].x = snake.body[j - 1].x
+            snake.body[j].y = snake.body[j - 1].y
+            
+            print(j - 1)
+            pygame.draw.rect(screen, BLACK, snake.body[j])
 
-        pygame.draw.rect(screen, BLACK, part)
+    snake.body[0].x = snake.x
+    snake.body[0].y = snake.y
 
-        i += 1
-
-        # print(snake.body)
-        # print("Head x: {}".format(snake.x))
-        # print("Body x: {}".format(snake.body[0].x))
-        # print("Head y: {}".format(snake.y))
-        # print("Body y: {}".format(snake.body[0].y))
-        # print()
-        # time.sleep(1)
-    i = 1
-
-
-        # print(part.x)
-        # print(snake.body)
-        # exit()
-    # Draws where the snake moves.
-    # pygame.draw.rect(screen, BLACK, snake.draw())
-    # print(snake.body)
 
 def Fruit():
 
@@ -246,9 +196,8 @@ def SnakeGame():
     # Draws the grid for the game, the initial snake and the fruit.
     snake = Snake(width / 2 - 30, height / 2 - 60, [], 1)
     pygame.draw.rect(screen, BLACK, snake.draw())
+    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
     fruit = Fruit()
-
-    grow = False
 
     # Score variable.
     score = 0
@@ -295,12 +244,14 @@ def SnakeGame():
         # Then it will add one to the score and display it.
         if snake.x == fruit[0] and snake.y == fruit[1]:
 
+            Grow(snake, lastMove, fruit[0], fruit[1])
+
             # Generate a new fruit.
             fruit = Fruit()
 
             # Increase score by one and increase snake length.
             score += 1
-            Grow(snake, lastMove)
+            snake.size += 1
 
             # Erase the old score and put in the new score.
             scoreValue = smallfont.render(str(score), True, BLACK)
