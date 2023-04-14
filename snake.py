@@ -10,6 +10,7 @@ pygame.init()
 # Screen resolution.
 res = (900, 800)
 screen = pygame.display.set_mode(res)
+snakeScreen = pygame.display.set_mode(res)
 
 # Colours used.
 BLACK = [0, 0, 0]
@@ -33,11 +34,11 @@ center = screen.get_rect().center
 
 class Snake:
 
-    def __init__(self, x, y, body, size):
+    def __init__(self, x, y, body, tail):
         self.x = x
         self.y = y
         self.body = body
-        self.size = size
+        self.tail = tail
 
     def pos(self):
         return self.x, self.y
@@ -114,15 +115,27 @@ def DrawGrid(screen):
 
 def Grow(snake, direction, x, y):
     if direction == "left":
-        snake.body.append(pygame.Rect(x, y, blockSize, blockSize))
+        snake.body.insert(len(snake.body) - 1, pygame.Rect(x - 20, y, blockSize, blockSize))
     if direction == "right":
-        snake.body.append(pygame.Rect(x, y, blockSize, blockSize))
+        snake.body.insert(len(snake.body) - 1, pygame.Rect(x + 20, y, blockSize, blockSize))
     if direction == "up":
-        snake.body.append(pygame.Rect(x, y, blockSize, blockSize))
+        snake.body.insert(len(snake.body) - 1, pygame.Rect(x, y - 20, blockSize, blockSize))
     if direction == "down":
-        snake.body.append(pygame.Rect(x, y, blockSize, blockSize))
+        snake.body.insert(len(snake.body) - 1, pygame.Rect(x, y + 20, blockSize, blockSize))
 
-def MoveSnake(direction, snake, lastDirection):
+def Tail(snake, direction,  x, y):
+    if direction == "left":
+        snake.tail = pygame.Rect(x + 20, y, blockSize, blockSize)
+    if direction == "right":
+        snake.tail = pygame.Rect(x - 20, y, blockSize, blockSize)
+    if direction == "up":
+        snake.tail = pygame.Rect(x, y + 20, blockSize, blockSize)
+    if direction == "down":
+        snake.tail = pygame.Rect(x, y - 20, blockSize, blockSize)
+
+    return snake.tail
+
+def MoveSnake(direction, snake):
 
     # Draw's the background and grid back.
     pygame.draw.rect(screen, pygame.Color(GRASS), snake.draw())
@@ -142,24 +155,32 @@ def MoveSnake(direction, snake, lastDirection):
         if snake.y < 700:
             snake.y += 20
 
-    pygame.draw.rect(screen, BLACK, snake.draw())
-
-    # The head is at position 0 in the boy list so update that value.
+    pygame.draw.rect(snakeScreen, BLACK, snake.draw())
 
     # Code for the body.
-    if len(snake.body) > 1:
-        for j in range(1, len(snake.body)):
-            pygame.draw.rect(screen, pygame.Color(GRASS), snake.body[-1])
-            pygame.draw.rect(screen, BLACK, snake.body[-1], 1)
+    if len(snake.body) > 2:
 
+        for j in range(1, len(snake.body)):
+
+            square = snake.body[-1]
+            pygame.draw.rect(screen, pygame.Color(GRASS), square)
+            pygame.draw.rect(screen, BLACK, square, 1)
+            
             snake.body[j].x = snake.body[j - 1].x
             snake.body[j].y = snake.body[j - 1].y
-            
-            print(j - 1)
-            pygame.draw.rect(screen, BLACK, snake.body[j])
 
+            pygame.draw.rect(snakeScreen, BLACK, snake.body[j])
+
+            # Think i need to implement it so when it's time to grow, it waits for the snake to fully pass through before drawing the next segment.
+
+
+    # Update the head in the body list.
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
+
+    print(snake.body)   
+        # if len(snake.body) == 4:
+        #     exit()
 
 
 def Fruit():
@@ -170,7 +191,7 @@ def Fruit():
 
     # Draw's the fruit on the grid.
     rect = pygame.Rect(x, y, blockSize, blockSize)
-    pygame.draw.rect(screen, RED, rect)
+    pygame.draw.rect(snakeScreen, RED, rect)
 
     # Returns the position of the fruit.
     return x, y
@@ -181,23 +202,25 @@ def SnakeGame():
     background_colour = pygame.Color("#8fcb9e")
     res = (900, 800)
     screen = pygame.display.set_mode(res)
+    snakeScreen = pygame.display.set_mode(res)
     pygame.display.set_caption('Snake Game')
     screen.fill(background_colour)
+    snakeScreen.fill(background_colour)
     pygame.display.flip()
 
     # Keep track of what direction and when the snake should move.
     clock = pygame.time.Clock()
     lastMove = "left"
-    lastDirection = ""
 
     # Drawing the grid.
     DrawGrid(screen)
 
     # Draws the grid for the game, the initial snake and the fruit.
-    snake = Snake(width / 2 - 30, height / 2 - 60, [], 1)
-    pygame.draw.rect(screen, BLACK, snake.draw())
-    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
     fruit = Fruit()
+    snake = Snake(width / 2 - 30, height / 2 - 60, [], pygame.Rect(fruit[0], fruit[1], blockSize, blockSize))
+    pygame.draw.rect(snakeScreen, BLACK, snake.draw())
+    snake.body.insert(len(snake.body) - 1, pygame.Rect(snake.x, snake.y, blockSize, blockSize))
+    snake.body.append(pygame.Rect(fruit[0], fruit[1], blockSize, blockSize))
 
     # Score variable.
     score = 0
@@ -210,8 +233,6 @@ def SnakeGame():
 
         pygame.display.update()
         
-        lastDirection = lastMove
-
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -243,15 +264,14 @@ def SnakeGame():
         # When you get a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
         if snake.x == fruit[0] and snake.y == fruit[1]:
-
+            
             Grow(snake, lastMove, fruit[0], fruit[1])
 
             # Generate a new fruit.
             fruit = Fruit()
 
-            # Increase score by one and increase snake length.
+            # Increase score by one.
             score += 1
-            snake.size += 1
 
             # Erase the old score and put in the new score.
             scoreValue = smallfont.render(str(score), True, BLACK)
@@ -260,7 +280,7 @@ def SnakeGame():
 
         # This moves the snake at a certain time interval.
         if clock.tick(6):
-            MoveSnake(lastMove, snake, lastDirection)
+            MoveSnake(lastMove, snake)
             pygame.display.update()
     
 # Runs the main menu.
