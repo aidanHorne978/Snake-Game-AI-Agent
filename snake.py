@@ -170,9 +170,13 @@ def MoveSnake(direction, snake):
             snake.body[j].y = snake.body[j - 1].y
 
             pygame.draw.rect(snakeScreen, BLACK, snake.body[j])
+            time.sleep(1)
+            if j == len(snake.body):
+                print("i ran")
 
             # Think i need to implement it so when it's time to grow, it waits for the snake to fully pass through before drawing the next segment.
-
+            
+            # Need to find an if statement for when the visable tail just leaves the fruit square and the phantom tail should be ontop of it.
 
     # Update the head in the body list.
     snake.body[0].x = snake.x
@@ -264,7 +268,7 @@ def SnakeGame():
         # When you get a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
         if snake.x == fruit[0] and snake.y == fruit[1]:
-            
+
             Grow(snake, lastMove, fruit[0], fruit[1])
 
             # Generate a new fruit.
@@ -282,7 +286,7 @@ def SnakeGame():
         if clock.tick(6):
             MoveSnake(lastMove, snake)
             pygame.display.update()
-    
+        
 # Runs the main menu.
 MainMenu()
 
