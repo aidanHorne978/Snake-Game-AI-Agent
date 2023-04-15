@@ -116,10 +116,10 @@ def Grow(snake, direction):
         snake.body.insert(len(snake.body), segment)
     if direction == "right":
         segment = pygame.Rect(snake.body[-1].x - blockSize, snake.body[-1].y, blockSize, blockSize)
-        snake.body.insert(len(snake.body), segment)
+        snake.body.insert(len(snake.body), segment)    
     if direction == "up":
         segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y + blockSize, blockSize, blockSize)
-        snake.body.insert(len(snake.body), segment)
+        snake.body.insert(len(snake.body), segment)   
     if direction == "down":
         segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y - blockSize, blockSize, blockSize)
         snake.body.insert(len(snake.body), segment)
