@@ -34,11 +34,10 @@ center = screen.get_rect().center
 
 class Snake:
 
-    def __init__(self, x, y, body, tail):
+    def __init__(self, x, y, body):
         self.x = x
         self.y = y
         self.body = body
-        self.tail = tail
 
     def pos(self):
         return self.x, self.y
@@ -113,27 +112,25 @@ def DrawGrid(screen):
             pygame.draw.rect(screen, pygame.Color(GRASS), rect)
             pygame.draw.rect(screen, BLACK, rect, 1)
 
-def Grow(snake, direction, x, y):
-    if direction == "left":
-        snake.body.insert(len(snake.body) - 1, pygame.Rect(x - 20, y, blockSize, blockSize))
-    if direction == "right":
-        snake.body.insert(len(snake.body) - 1, pygame.Rect(x + 20, y, blockSize, blockSize))
-    if direction == "up":
-        snake.body.insert(len(snake.body) - 1, pygame.Rect(x, y - 20, blockSize, blockSize))
-    if direction == "down":
-        snake.body.insert(len(snake.body) - 1, pygame.Rect(x, y + 20, blockSize, blockSize))
+def Grow(snake, direction):
 
-def Tail(snake, direction,  x, y):
-    if direction == "left":
-        snake.tail = pygame.Rect(x + 20, y, blockSize, blockSize)
-    if direction == "right":
-        snake.tail = pygame.Rect(x - 20, y, blockSize, blockSize)
-    if direction == "up":
-        snake.tail = pygame.Rect(x, y + 20, blockSize, blockSize)
-    if direction == "down":
-        snake.tail = pygame.Rect(x, y - 20, blockSize, blockSize)
+    print(snake.body[-1])
 
-    return snake.tail
+    if direction == "left":
+        segment = pygame.Rect(snake.body[-1].x + 20, snake.body[-1].y, blockSize, blockSize)
+        snake.body.append(segment)
+    if direction == "right":
+        segment = pygame.Rect(snake.body[-1].x - 20, snake.body[-1].y, blockSize, blockSize)
+        snake.body.append(segment)
+    if direction == "up":
+        segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y + 20, blockSize, blockSize)
+        snake.body.append(segment)
+    if direction == "down":
+        segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y - 20, blockSize, blockSize)
+        snake.body.append(segment)
+
+    print(snake.body[-1])
+    time.sleep(4)
 
 def MoveSnake(direction, snake):
 
@@ -157,35 +154,31 @@ def MoveSnake(direction, snake):
 
     pygame.draw.rect(snakeScreen, BLACK, snake.draw())
 
+    print(snake.body)   
+
     # Code for the body.
-    if len(snake.body) > 2:
+    if len(snake.body) > 1:
+        for j in reversed(range(1, len(snake.body))):
 
-        for j in range(1, len(snake.body)):
+            if snake.body[j - 1] == snake.x:
+                snake.body[j].x = snake.x
+            else:
+                snake.body[j].x = snake.body[j - 1].x
 
-            square = snake.body[-1]
-            pygame.draw.rect(screen, pygame.Color(GRASS), square)
-            pygame.draw.rect(screen, BLACK, square, 1)
-            
-            snake.body[j].x = snake.body[j - 1].x
-            snake.body[j].y = snake.body[j - 1].y
+            if snake.body[j - 1] == snake.y:
+                snake.body[j].y = snake.y
+            else:
+                snake.body[j].y = snake.body[j - 1].y
 
             pygame.draw.rect(snakeScreen, BLACK, snake.body[j])
-            time.sleep(1)
-            if j == len(snake.body):
-                print("i ran")
 
-            # Think i need to implement it so when it's time to grow, it waits for the snake to fully pass through before drawing the next segment.
-            
-            # Need to find an if statement for when the visable tail just leaves the fruit square and the phantom tail should be ontop of it.
+            pygame.draw.rect(screen, pygame.Color(GRASS), snake.body[-1])
+            pygame.draw.rect(screen, BLACK, snake.body[-1], 1)
 
     # Update the head in the body list.
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
-
-    print(snake.body)   
-        # if len(snake.body) == 4:
-        #     exit()
-
+    # print(snake.body)   
 
 def Fruit():
 
@@ -219,12 +212,13 @@ def SnakeGame():
     # Drawing the grid.
     DrawGrid(screen)
 
-    # Draws the grid for the game, the initial snake and the fruit.
+    # Draws the grid for the game and the fruit.
     fruit = Fruit()
-    snake = Snake(width / 2 - 30, height / 2 - 60, [], pygame.Rect(fruit[0], fruit[1], blockSize, blockSize))
+    snake = Snake(width / 2 - 30, height / 2 - 60, [])
     pygame.draw.rect(snakeScreen, BLACK, snake.draw())
-    snake.body.insert(len(snake.body) - 1, pygame.Rect(snake.x, snake.y, blockSize, blockSize))
-    snake.body.append(pygame.Rect(fruit[0], fruit[1], blockSize, blockSize))
+
+    # Head of snake.
+    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
 
     # Score variable.
     score = 0
@@ -234,9 +228,9 @@ def SnakeGame():
     screen.blit(scoreValue, (center[0] - 30, center[1] + 330))
 
     while True:
-
-        pygame.display.update()
         
+        pygame.display.update()
+
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -265,11 +259,16 @@ def SnakeGame():
                         lastMove = "down"
                 # pygame.draw.rect(screen, BLACK, snake.draw())
 
+        # This moves the snake at a certain time interval.
+        if clock.tick(6):
+            MoveSnake(lastMove, snake)
+            pygame.display.update()
+
         # When you get a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
         if snake.x == fruit[0] and snake.y == fruit[1]:
 
-            Grow(snake, lastMove, fruit[0], fruit[1])
+            Grow(snake, lastMove)
 
             # Generate a new fruit.
             fruit = Fruit()
@@ -282,11 +281,7 @@ def SnakeGame():
             screen.fill(background_colour, (center[0] - 30, center[1] + 330, 100, 100))
             screen.blit(scoreValue, (center[0] - 30, center[1] + 330))
 
-        # This moves the snake at a certain time interval.
-        if clock.tick(6):
-            MoveSnake(lastMove, snake)
-            pygame.display.update()
-        
+
 # Runs the main menu.
 MainMenu()
 
