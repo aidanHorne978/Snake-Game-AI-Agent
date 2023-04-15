@@ -1,6 +1,5 @@
 import pygame
 import random
-import time
 
 ## Global Variables
 
@@ -336,5 +335,4 @@ MainMenu()
 
 # Once user clicks "start", the main menu will close and the code then runs the game
 # and will keep running until the user closes the game.
-while True:
-    SnakeGame()
+SnakeGame()
