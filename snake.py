@@ -189,6 +189,7 @@ def Fruit():
 
 def SnakeGame():
 
+
     # Creating the screen.
     background_colour = pygame.Color("#8fcb9e")
     res = (900, 800)
