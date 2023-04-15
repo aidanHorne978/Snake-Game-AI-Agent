@@ -128,27 +128,17 @@ def Grow(snake, direction):
 
 def MoveSnake(direction, snake):
 
-    # Draw's the background and grid back.
-    pygame.draw.rect(screen, pygame.Color(GRASS), snake.draw())
-    pygame.draw.rect(screen, BLACK, snake.draw(), 1)
-
     # Moves the head of the snake.
     if direction == "left":
-        if snake.x > blockSize:
-            snake.x -= blockSize
+        snake.x -= blockSize
     elif direction == "right":
-        if snake.x < 850:
-            snake.x += blockSize
+        snake.x += blockSize
     elif direction == "up":
-        if snake.y > blockSize:
-            snake.y -= blockSize
+        snake.y -= blockSize
     elif direction == "down":
-        if snake.y < 700:
-            snake.y += blockSize
+        snake.y += blockSize
 
     pygame.draw.rect(snakeScreen, BLACK, snake.draw())
-
-    print(snake.body)   
 
     # Code for the body.
     if len(snake.body) > 1:
@@ -164,21 +154,20 @@ def MoveSnake(direction, snake):
             else:
                 snake.body[j].y = snake.body[j - 1].y
 
+            # Draw's the background and grid back.
             pygame.draw.rect(snakeScreen, BLACK, snake.body[j])
-
             pygame.draw.rect(screen, pygame.Color(GRASS), snake.body[-1])
             pygame.draw.rect(screen, BLACK, snake.body[-1], 1)
 
     # Update the head in the body list.
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
-    # print(snake.body)   
 
 def Fruit():
 
     # Range is so it fits in the grid of the game.
     x = random.randrange(blockSize, res[0] - blockSize, blockSize)
-    y = random.randrange(blockSize, res[1] - blockSize, blockSize)
+    y = random.randrange(blockSize, res[1] - blockSize - 100, blockSize)
 
     # Draw's the fruit on the grid.
     rect = pygame.Rect(x, y, blockSize, blockSize)
@@ -187,8 +176,10 @@ def Fruit():
     # Returns the position of the fruit.
     return x, y
 
-def SnakeGame():
+def GameOver():
+    exit()
 
+def SnakeGame():
 
     # Creating the screen.
     background_colour = pygame.Color("#8fcb9e")
@@ -229,6 +220,19 @@ def SnakeGame():
         
         pygame.display.update()
 
+        # If the snake hit's itself.
+        if len(snake.body) > 2:
+            for parts in snake.body[1:]:
+                if snake.x == parts.x and snake.y == parts.y:
+                    GameOver()
+
+        if snake.x < 20 or snake.x > 860:
+            GameOver()
+        
+        if snake.y < 20 or snake.y > 680:
+            GameOver()
+
+
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -261,6 +265,7 @@ def SnakeGame():
         # Then it will add one to the score and display it.
         if snake.x == fruit[0] and snake.y == fruit[1]:
 
+            # Adds a part to the body.
             Grow(snake, lastMove)
 
             # Generate a new fruit.
@@ -273,7 +278,6 @@ def SnakeGame():
             scoreValue = smallfont.render(str(score), True, BLACK)
             screen.fill(background_colour, (center[0] - 30, center[1] + 330, 100, 100))
             screen.blit(scoreValue, (center[0] - 30, center[1] + 330))
-
 
 # Runs the main menu.
 MainMenu()
