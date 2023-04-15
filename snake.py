@@ -106,31 +106,25 @@ def MainMenu():
 def DrawGrid(screen):
 
     # Drawing the grid.
-    for x in range(20, res[0] - 20, blockSize):
-        for y in range(20, res[1] - 80, blockSize):
-            rect = pygame.Rect(x, y, blockSize, blockSize)
-            pygame.draw.rect(screen, pygame.Color(GRASS), rect)
-            pygame.draw.rect(screen, BLACK, rect, 1)
+    for x in range(blockSize, res[0] - 20, blockSize):
+        for y in range(blockSize, res[1] - 80, blockSize):
+            pygame.draw.rect(screen, pygame.Color(GRASS), pygame.Rect(x, y, blockSize, blockSize))
+            pygame.draw.rect(screen, BLACK, pygame.Rect(x, y, blockSize, blockSize), 1)
 
 def Grow(snake, direction):
 
-    print(snake.body[-1])
-
     if direction == "left":
-        segment = pygame.Rect(snake.body[-1].x + 20, snake.body[-1].y, blockSize, blockSize)
-        snake.body.append(segment)
+        segment = pygame.Rect(snake.body[-1].x + blockSize, snake.body[-1].y, blockSize, blockSize)
+        snake.body.insert(len(snake.body), segment)
     if direction == "right":
-        segment = pygame.Rect(snake.body[-1].x - 20, snake.body[-1].y, blockSize, blockSize)
-        snake.body.append(segment)
+        segment = pygame.Rect(snake.body[-1].x - blockSize, snake.body[-1].y, blockSize, blockSize)
+        snake.body.insert(len(snake.body), segment)
     if direction == "up":
-        segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y + 20, blockSize, blockSize)
-        snake.body.append(segment)
+        segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y + blockSize, blockSize, blockSize)
+        snake.body.insert(len(snake.body), segment)
     if direction == "down":
-        segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y - 20, blockSize, blockSize)
-        snake.body.append(segment)
-
-    print(snake.body[-1])
-    time.sleep(4)
+        segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y - blockSize, blockSize, blockSize)
+        snake.body.insert(len(snake.body), segment)
 
 def MoveSnake(direction, snake):
 
@@ -140,17 +134,17 @@ def MoveSnake(direction, snake):
 
     # Moves the head of the snake.
     if direction == "left":
-        if snake.x > 20:
-            snake.x -= 20
+        if snake.x > blockSize:
+            snake.x -= blockSize
     elif direction == "right":
         if snake.x < 850:
-            snake.x += 20
+            snake.x += blockSize
     elif direction == "up":
-        if snake.y > 20:
-            snake.y -= 20
+        if snake.y > blockSize:
+            snake.y -= blockSize
     elif direction == "down":
         if snake.y < 700:
-            snake.y += 20
+            snake.y += blockSize
 
     pygame.draw.rect(snakeScreen, BLACK, snake.draw())
 
@@ -183,8 +177,8 @@ def MoveSnake(direction, snake):
 def Fruit():
 
     # Range is so it fits in the grid of the game.
-    x = random.randrange(20, 860, 20)
-    y = random.randrange(20, 700, 20)
+    x = random.randrange(blockSize, res[0] - blockSize, blockSize)
+    y = random.randrange(blockSize, res[1] - blockSize, blockSize)
 
     # Draw's the fruit on the grid.
     rect = pygame.Rect(x, y, blockSize, blockSize)
@@ -220,6 +214,9 @@ def SnakeGame():
     # Head of snake.
     snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
 
+    # Tail of snake.
+    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
+
     # Score variable.
     score = 0
     scoreTitle = smallfont.render('score:' , True , BLACK)
@@ -242,22 +239,17 @@ def SnakeGame():
                 pygame.draw.rect(screen, pygame.Color(GRASS), snake.draw())
                 pygame.draw.rect(screen, BLACK, snake.draw(), 1)
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    # snake.x -= 20
                     if lastMove != "right":
                         lastMove = "left"
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    # snake.x += 20
                     if lastMove != "left":
                         lastMove = "right"
                 if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    # snake.y -= 20
                     if lastMove != "down":
                         lastMove = "up"
                 if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    # snake.y += 20
                     if lastMove != "up":
                         lastMove = "down"
-                # pygame.draw.rect(screen, BLACK, snake.draw())
 
         # This moves the snake at a certain time interval.
         if clock.tick(6):
