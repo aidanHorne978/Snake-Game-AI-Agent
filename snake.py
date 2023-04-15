@@ -10,7 +10,6 @@ pygame.init()
 # Screen resolution.
 res = (900, 800)
 screen = pygame.display.set_mode(res)
-snakeScreen = pygame.display.set_mode(res)
 
 # Colours used.
 BLACK = [0, 0, 0]
@@ -138,7 +137,7 @@ def MoveSnake(direction, snake):
     elif direction == "down":
         snake.y += blockSize
 
-    pygame.draw.rect(snakeScreen, BLACK, snake.draw())
+    pygame.draw.rect(screen, BLACK, snake.draw())
 
     # Code for the body.
     if len(snake.body) > 1:
@@ -154,8 +153,9 @@ def MoveSnake(direction, snake):
             else:
                 snake.body[j].y = snake.body[j - 1].y
 
+            pygame.draw.rect(screen, BLACK, snake.body[j])
+
             # Draw's the background and grid back.
-            pygame.draw.rect(snakeScreen, BLACK, snake.body[j])
             pygame.draw.rect(screen, pygame.Color(GRASS), snake.body[-1])
             pygame.draw.rect(screen, BLACK, snake.body[-1], 1)
 
@@ -171,13 +171,10 @@ def Fruit():
 
     # Draw's the fruit on the grid.
     rect = pygame.Rect(x, y, blockSize, blockSize)
-    pygame.draw.rect(snakeScreen, RED, rect)
+    pygame.draw.rect(screen, RED, rect)
 
     # Returns the position of the fruit.
     return x, y
-
-def GameOver():
-    exit()
 
 def SnakeGame():
 
@@ -185,10 +182,8 @@ def SnakeGame():
     background_colour = pygame.Color("#8fcb9e")
     res = (900, 800)
     screen = pygame.display.set_mode(res)
-    snakeScreen = pygame.display.set_mode(res)
     pygame.display.set_caption('Snake Game')
     screen.fill(background_colour)
-    snakeScreen.fill(background_colour)
     pygame.display.flip()
 
     # Keep track of what direction and when the snake should move.
@@ -201,7 +196,7 @@ def SnakeGame():
     # Draws the grid for the game and the fruit.
     fruit = Fruit()
     snake = Snake(width / 2 - 30, height / 2 - 60, [])
-    pygame.draw.rect(snakeScreen, BLACK, snake.draw())
+    pygame.draw.rect(screen, BLACK, snake.draw())
 
     # Head of snake.
     snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
@@ -213,8 +208,8 @@ def SnakeGame():
     score = 0
     scoreTitle = smallfont.render('score:' , True , BLACK)
     scoreValue = smallfont.render(str(score), True, BLACK)
-    screen.blit(scoreTitle, (center[0] - 125, center[1] + 330))
-    screen.blit(scoreValue, (center[0] - 30, center[1] + 330))
+    screen.blit(scoreTitle, (center[0] - 75, center[1] + 330))
+    screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
 
     while True:
         
@@ -228,8 +223,8 @@ def SnakeGame():
 
         if snake.x < 20 or snake.x > 860:
             GameOver()
-        
-        if snake.y < 20 or snake.y > 680:
+
+        if snake.y < 20 or snake.y > 700:
             GameOver()
 
 
@@ -276,11 +271,70 @@ def SnakeGame():
 
             # Erase the old score and put in the new score.
             scoreValue = smallfont.render(str(score), True, BLACK)
-            screen.fill(background_colour, (center[0] - 30, center[1] + 330, 100, 100))
-            screen.blit(scoreValue, (center[0] - 30, center[1] + 330))
+            screen.fill(background_colour, (center[0] + 15, center[1] + 330, 100, 100))
+            screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+
+def GameOver():
+
+    s = pygame.Surface(res)
+    s.fill(BLACK)
+    s.set_alpha(200)
+    screen.blit(s, (0,0))
+    pygame.display.flip()
+
+    quit = smallfont.render('quit' , True , color)
+    start = bigfont.render('play again' , True , color)
+
+    while True:
+
+        # Close screen if user clicks quit or the red arrow in the top right corner.
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and quitButton:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and startButton:
+                SnakeGame()
+
+        # To find where the mouse is at all times.
+        mouse = pygame.mouse.get_pos()
+
+        # Coordinates of the quitButton for hit registering and drawing the quit button.
+        quitButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
+
+        # Coordinates of the start button for hit registering and drawing the quit button.
+        startButton = width / 2 - 190 <= mouse[0] <= width / 2 + 170 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
+
+        # Draws quit button as lit up if mouse is hovering, otherwise draws it normally.
+        if quitButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60)) 
+        else: 
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60)) 
+
+        # Draws the start button as lit up if mouse is hovering, otherwise draws it normally.
+        if startButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 190,height/2 - 100, 360, 120)) 
+        else: 
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 190,height/2 - 100, 360, 120)) 
+
+
+        # Draws the "quit" and "start" text.
+        screen.blit(quit, (center[0] - 40, center[1] + 56))
+        screen.blit(start, (center[0] - 150, center[1] - 75))
+        
+        # Puts the "snake" logo onto the screen.
+        logo = pygame.image.load('images/game-over.png')
+        screen.blit(logo, (center[0] - 230, center[1] - 350))
+
+        # updates the frames of the game 
+        pygame.display.update() 
 
 # Runs the main menu.
 MainMenu()
 
-# Once user clicks "start", the main menu will close and the code then runs the game.
-SnakeGame()
+# Once user clicks "start", the main menu will close and the code then runs the game
+# and will keep running until the user closes the game.
+while True:
+    SnakeGame()
