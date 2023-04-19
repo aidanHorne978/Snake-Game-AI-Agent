@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import pygame
 import random
 
@@ -87,7 +88,7 @@ def MainMenu():
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
-                return
+                return 1
 
         # To find where the mouse is at all times.
         mouse = pygame.mouse.get_pos()
@@ -186,7 +187,7 @@ def MoveSnake(direction, snake, fruit):
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
 
-def SnakeGame():
+def SnakeGame(player):
 
     # Creating the screen.
     background_colour = pygame.Color("#8fcb9e")
@@ -206,15 +207,14 @@ def SnakeGame():
     # Draws the grid for the game and the fruit.
     fruit = Fruit(0,0)
     fruit.generateFruit()
-    snake = Snake(width / 2 - 30, height / 2 - 60, [])
-    pygame.draw.rect(screen, BLACK, snake.draw())
+    pygame.draw.rect(screen, BLACK, Snake.draw())
     fruit.drawFruit()
 
     # Head of snake.
-    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
+    Snake.body.append(pygame.Rect(Snake.x, Snake.y, blockSize, blockSize))
 
     # Tail of snake.
-    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
+    Snake.body.append(pygame.Rect(Snake.x, Snake.y, blockSize, blockSize))
 
     # Score variable.
     score = 0
@@ -277,7 +277,7 @@ def SnakeGame():
 
             # Generate a new fruit.
             fruit.generateFruit()
-            
+
             # Increase score by one.
             score += 1
 
@@ -343,9 +343,9 @@ def GameOver():
         # updates the frames of the game 
         pygame.display.update() 
 
-# Runs the main menu.
-MainMenu()
+# # Runs the main menu.
+# MainMenu()
 
-# Once user clicks "start", the main menu will close and the code then runs the game
-# and will keep running until the user closes the game.
-SnakeGame()
+# # Once user clicks "start", the main menu will close and the code then runs the game
+# # and will keep running until the user closes the game.
+# SnakeGame()
