@@ -207,14 +207,14 @@ def SnakeGame(player):
     # Draws the grid for the game and the fruit.
     fruit = Fruit(0,0)
     fruit.generateFruit()
-    pygame.draw.rect(screen, BLACK, Snake.draw())
+    pygame.draw.rect(screen, BLACK, player.draw())
     fruit.drawFruit()
 
     # Head of snake.
-    Snake.body.append(pygame.Rect(Snake.x, Snake.y, blockSize, blockSize))
+    player.body.append(pygame.Rect(player.x, player.y, blockSize, blockSize))
 
     # Tail of snake.
-    Snake.body.append(pygame.Rect(Snake.x, Snake.y, blockSize, blockSize))
+    player.body.append(pygame.Rect(player.x, player.y, blockSize, blockSize))
 
     # Score variable.
     score = 0
@@ -228,15 +228,15 @@ def SnakeGame(player):
         pygame.display.update()
 
         # If the snake hit's itself.
-        if len(snake.body) > 2:
-            for parts in snake.body[1:]:
-                if snake.x == parts.x and snake.y == parts.y:
+        if len(player.body) > 2:
+            for parts in player.body[1:]:
+                if player.x == parts.x and player.y == parts.y:
                     GameOver()
 
-        if snake.x < 20 or snake.x > 860:
+        if player.x < 20 or player.x > 860:
             GameOver()
 
-        if snake.y < 20 or snake.y > 700:
+        if player.y < 20 or player.y > 700:
             GameOver()
 
 
@@ -248,8 +248,8 @@ def SnakeGame(player):
             
             # If the user presses a key that is allowed it will remember the key for when the clock ticks and the snake is moved.
             if event.type == pygame.KEYDOWN:
-                pygame.draw.rect(screen, pygame.Color(GRASS), snake.draw())
-                pygame.draw.rect(screen, BLACK, snake.draw(), 1)
+                pygame.draw.rect(screen, pygame.Color(GRASS), player.draw())
+                pygame.draw.rect(screen, BLACK, player.draw(), 1)
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                     if lastMove != "right":
                         lastMove = "left"
@@ -265,15 +265,15 @@ def SnakeGame(player):
 
         # This moves the snake at a certain time interval.
         if clock.tick(6):
-            MoveSnake(lastMove, snake, fruit)
+            MoveSnake(lastMove, player, fruit)
             pygame.display.update()
 
         # When you get a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
-        if snake.x == fruit.pos()[0] and snake.y == fruit.pos()[1]:
+        if player.x == fruit.pos()[0] and player.y == fruit.pos()[1]:
 
             # Adds a part to the body.
-            Grow(snake, lastMove)
+            Grow(player, lastMove)
 
             # Generate a new fruit.
             fruit.generateFruit()

@@ -12,7 +12,6 @@ snake.MainMenu()
 
 player = snake.Snake(width / 2 - 30, height / 2 - 60, [])
 
-
 snake.SnakeGame(player)
 
 
