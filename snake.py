@@ -42,7 +42,29 @@ class Snake:
 
     def draw(self):
         return pygame.Rect(self.x, self.y, blockSize, blockSize)
+
+class Fruit:
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
     
+    def pos(self):
+        return self.x, self.y
+
+    # Range is so it fits in the grid of the game.
+    def generateFruit(self):
+        newx = random.randrange(blockSize, res[0] - blockSize, blockSize)
+        newy = random.randrange(blockSize, res[1] - blockSize - 100, blockSize)
+        self.x = newx
+        self.y = newy
+        return self.x, self.y
+
+    # Draw's the fruit on the grid.
+    def drawFruit(self):
+        rect = pygame.Rect(self.x, self.y, blockSize, blockSize)
+        return pygame.draw.rect(screen, RED, rect)
+
 def MainMenu():
 
     # Creating the screen.
@@ -124,7 +146,9 @@ def Grow(snake, direction):
         segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y - blockSize, blockSize, blockSize)
         snake.body.insert(len(snake.body), segment)
 
-def MoveSnake(direction, snake):
+def MoveSnake(direction, snake, fruit):
+
+    fruit.drawFruit()
 
     # Moves the head of the snake.
     if direction == "left":
@@ -162,19 +186,6 @@ def MoveSnake(direction, snake):
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
 
-def Fruit():
-
-    # Range is so it fits in the grid of the game.
-    x = random.randrange(blockSize, res[0] - blockSize, blockSize)
-    y = random.randrange(blockSize, res[1] - blockSize - 100, blockSize)
-
-    # Draw's the fruit on the grid.
-    rect = pygame.Rect(x, y, blockSize, blockSize)
-    pygame.draw.rect(screen, RED, rect)
-
-    # Returns the position of the fruit.
-    return x, y
-
 def SnakeGame():
 
     # Creating the screen.
@@ -193,9 +204,11 @@ def SnakeGame():
     DrawGrid(screen)
 
     # Draws the grid for the game and the fruit.
-    fruit = Fruit()
+    fruit = Fruit(0,0)
+    fruit.generateFruit()
     snake = Snake(width / 2 - 30, height / 2 - 60, [])
     pygame.draw.rect(screen, BLACK, snake.draw())
+    fruit.drawFruit()
 
     # Head of snake.
     snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
@@ -252,19 +265,19 @@ def SnakeGame():
 
         # This moves the snake at a certain time interval.
         if clock.tick(6):
-            MoveSnake(lastMove, snake)
+            MoveSnake(lastMove, snake, fruit)
             pygame.display.update()
 
         # When you get a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
-        if snake.x == fruit[0] and snake.y == fruit[1]:
+        if snake.x == fruit.pos()[0] and snake.y == fruit.pos()[1]:
 
             # Adds a part to the body.
             Grow(snake, lastMove)
 
             # Generate a new fruit.
-            fruit = Fruit()
-
+            fruit.generateFruit()
+            
             # Increase score by one.
             score += 1
 
