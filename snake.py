@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import pygame
 import random
+import numpy as np
 
 # Initilizing
 pygame.init()
@@ -31,6 +32,7 @@ center = screen.get_rect().center
 
 # Keep track of what direction and when the snake should move.
 clock = pygame.time.Clock()
+distance = 0
 
 class Snake:
 
@@ -44,6 +46,12 @@ class Snake:
 
     def draw(self):
         return pygame.Rect(self.x, self.y, blockSize, blockSize)
+
+    def board(self):
+        board = np.zeros((900 // blockSize, 800 // blockSize))
+        print(len(board))
+        return board
+
 
 class Fruit:
 
@@ -195,6 +203,7 @@ def SnakeGame(player, lastMove, fruit):
     global screen
     global score
     global background_colour
+    global distance
 
     if len(player.body) < 1:
 
@@ -214,6 +223,7 @@ def SnakeGame(player, lastMove, fruit):
         fruits.generateFruit()
         pygame.draw.rect(screen, BLACK, player.draw())
         fruits.drawFruit()
+        distance = 0
 
         # Head of snake.
         player.body.append(pygame.Rect(player.x, player.y, blockSize, blockSize))
@@ -232,18 +242,22 @@ def SnakeGame(player, lastMove, fruit):
     if len(player.body) > 2:
         for parts in player.body[1:]:
             if player.x == parts.x and player.y == parts.y:
-                GameOver()
+                return score, distance, False
+                # GameOver()
 
     if player.x < 20 or player.x > 860:
-        GameOver()
+        return score, distance, False
+        # GameOver()
 
     if player.y < 20 or player.y > 700:
-        GameOver()
+        return score, distance, False
+        # GameOver()
 
     # This moves the snake at a certain time interval.
-    if clock.tick(6):
-        MoveSnake(lastMove, player, fruits)
-        pygame.display.update()
+    # if clock.tick(6):
+    MoveSnake(lastMove, player, fruits)
+    distance += 1
+    pygame.display.update()
 
     # When you get a fruit it will replace it with another randomly generated fruit.
     # Then it will add one to the score and display it.
@@ -264,6 +278,8 @@ def SnakeGame(player, lastMove, fruit):
         screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
     
         pygame.display.update()
+
+    return score, distance, True
 
 def GameOver():
 
