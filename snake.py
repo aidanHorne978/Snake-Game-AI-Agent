@@ -188,10 +188,9 @@ def MoveSnake(direction, snake, fruit):
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
 
-def SnakeGame(player):
+def SnakeGame(player, lastMove, fruit):
 
     ## Global variables.
-    global lastMove
     global fruits
     global screen
     global score
@@ -209,10 +208,9 @@ def SnakeGame(player):
 
         # Drawing the grid.
         DrawGrid(screen)
-        lastMove = "left"
 
         # Draws the grid for the game and the fruit.
-        fruits = Fruit(0,0)
+        fruits = fruit
         fruits.generateFruit()
         pygame.draw.rect(screen, BLACK, player.draw())
         fruits.drawFruit()
@@ -229,9 +227,7 @@ def SnakeGame(player):
         scoreValue = smallfont.render(str(score), True, BLACK)
         screen.blit(scoreTitle, (center[0] - 75, center[1] + 330))
         screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
-        
-    pygame.display.update()
-    
+            
     # If the snake hit's itself.
     if len(player.body) > 2:
         for parts in player.body[1:]:
@@ -243,29 +239,6 @@ def SnakeGame(player):
 
     if player.y < 20 or player.y > 700:
         GameOver()
-
-    # Close screen if user clicks quit or the red arrow in the top right corner.
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-        
-        # If the user presses a key that is allowed it will remember the key for when the clock ticks and the snake is moved.
-        if event.type == pygame.KEYDOWN:
-            pygame.draw.rect(screen, pygame.Color(GRASS), player.draw())
-            pygame.draw.rect(screen, BLACK, player.draw(), 1)
-            if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                if lastMove != "right":
-                    lastMove = "left"
-            if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                if lastMove != "left":
-                    lastMove = "right"
-            if event.key == pygame.K_UP or event.key == pygame.K_w:
-                if lastMove != "down":
-                    lastMove = "up"
-            if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                if lastMove != "up":
-                    lastMove = "down"
 
     # This moves the snake at a certain time interval.
     if clock.tick(6):
@@ -289,6 +262,8 @@ def SnakeGame(player):
         scoreValue = smallfont.render(str(score), True, BLACK)
         screen.fill(background_colour, (center[0] + 15, center[1] + 330, 100, 100))
         screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+    
+        pygame.display.update()
 
 def GameOver():
 
