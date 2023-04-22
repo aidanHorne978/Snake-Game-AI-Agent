@@ -14,7 +14,7 @@ import time
 class Player:
 
     def __init__(self, chromosome, hScore, deaths, penalties, avg_steps):
-        chromosome = np.zeros(60)
+        chromosome = np.zeros(70)
         self.chromosome = chromosome
         self.hScore = hScore
         self.deaths = deaths
@@ -25,7 +25,7 @@ class Player:
         self.chromosome[index] = value
 
     def createPopulation(self):
-        self.chromosome = np.random.uniform(-1, 1, 60)
+        self.chromosome = np.random.uniform(-1, 1, 70)
     
     def displayPopulation(self):
         return print("{}".format(self.chromosome))
@@ -102,13 +102,13 @@ def makeMove(newPop, snake, lastMove):
         input_vector = np.append(input_vector, currdirection[i])
         input_vector = np.append(input_vector, posFood[i])
 
-    # input_vector = np.append(input_vector, int(distFood[0]))
-    # input_vector = np.append(input_vector, int(distFood[1]))
+    input_vector = np.append(input_vector, int(distFood[0]))
+    input_vector = np.append(input_vector, int(distFood[1]))
 
-    left = make_prediction(input_vector, newPop.chromosomeSet()[0:12])
-    right = make_prediction(input_vector, newPop.chromosomeSet()[15:27])
-    up = make_prediction(input_vector, newPop.chromosomeSet()[30:42])
-    down = make_prediction(input_vector, newPop.chromosomeSet()[45:57])
+    left = make_prediction(input_vector, newPop.chromosomeSet()[0:14])
+    right = make_prediction(input_vector, newPop.chromosomeSet()[15:29])
+    up = make_prediction(input_vector, newPop.chromosomeSet()[30:44])
+    down = make_prediction(input_vector, newPop.chromosomeSet()[45:59])
 
     move = left, right, up, down
 
@@ -165,7 +165,7 @@ def runGame(player, gen, lastMove):
         # Keeps track of highest score.
         if evaluation[0] > player.hScore:
             player.hScore = evaluation[0]
-        if steps == 3000:
+        if steps == 1000:
             return evaluation[0], evaluation[1], deaths
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
@@ -187,9 +187,9 @@ def fitness(population):
         score = player.hScore * 5000 - player.deaths * 50 - player.avg_steps * 10 - player.penalties * 100
 
         if score > 0:
-            fitness = score / player.hScore
+            fitness = score
         else:
-            fitness = 0
+            fitness = 0 + player.hScore * 20 + player.avg_steps
         
         scores.append(fitness)
     
@@ -197,17 +197,16 @@ def fitness(population):
 
 def crossover(population):
 
-    mother = population[0:11]
-    father = population[12:23]
+    mother = population[0:int(len(population) / 2 - 1)]
+    father = population[int(len(population) / 2):int(len(population) - 1)]
 
     newGeneration = []
-
     while len(newGeneration) != 50:
 
-        child = Player(np.zeros(0), 0, 0, 0, 0)
-        for j in range(13):
+        child = Player(np.array(mother[0].chromosomeSet()[0]), 0, 0, 0, 0)
+        for j in range(1, len(mother) - 1):
             
-            gene = random.randint(0, 10)
+            gene = random.randint(0, int(len(mother) / 2))
             coin = random.uniform(0, 1)
 
             if coin < 0.5:
@@ -224,7 +223,7 @@ def mutation(population):
     for i in range(len(population)):
 
         for j in range(5):
-            population[i].chromosomeSet()[random.randint(0, 60)] = random.randint(-1, 1)
+            population[i].chromosomeSet()[random.randint(0, 49)] = random.randint(-1, 1)
     
     return population
 
@@ -244,18 +243,24 @@ generation = 0
 # Run the main menu.
 # snake.MainMenu()
 
+
 while True:
-
+    
     print("Generation: {}".format(generation))
-
+    if generation == 100:
+        exit()
     results = []
     newGeneration = []
     currentScores = []
     for i in range(49):
         agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
         fruit = snake.Fruit(0,0)
+
         # Output is (score, distance, death, avg_steps, penalties)
-        score = runGame(population[i], generation, lastMove)
+        try:
+            score = runGame(population[i], generation, lastMove)
+        except IndexError:
+            print(len(population))
 
         if population[i].hScore != 0:
             population[i].avg_steps = int(population[i].avg_steps / population[i].hScore)
@@ -267,8 +272,9 @@ while True:
     x = 0
     currentFitness = fitness(population)
     print(currentFitness)
+    print()
     time.sleep(5)
-    while len(newGeneration) != 24:
+    while len(newGeneration) != 12:
 
         if x > 50 - len(newGeneration) - 1:
             x = 0
@@ -276,17 +282,13 @@ while True:
         if currentFitness[x] == max(currentFitness):
             newGeneration.append(population[x])
             currentFitness.remove(currentFitness[x])
-        
+    
         x += 1
 
     population = crossover(newGeneration)
-    population = mutation(newGeneration)
-
+    population = mutation(population)
 
     generation += 1
-
-
-
 
 
 # def UserControl():
