@@ -257,9 +257,6 @@ def SnakeGame(player, lastMove, fruit, generation):
         return score, distance, False
         # GameOver()
 
-    if distance > 1000 and score < 5:
-        return 0, 0, False
-
     # This moves the snake at a certain time interval.
     # if clock.tick(6):
     MoveSnake(lastMove, player, fruits)

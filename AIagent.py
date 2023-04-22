@@ -165,7 +165,7 @@ def runGame(player, gen, lastMove):
         # Keeps track of highest score.
         if evaluation[0] > player.hScore:
             player.hScore = evaluation[0]
-        if steps == 1000:
+        if steps == 3000:
             return evaluation[0], evaluation[1], deaths
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
@@ -184,10 +184,14 @@ def fitness(population):
     
     for player in population:
 
-        if player.hScore >= 1:
-            score = player.hScore * 5000 - player.deaths * 150 - player.avg_steps * 100 - player.penalties * 1000
+        score = player.hScore * 5000 - player.deaths * 50 - player.avg_steps * 10 - player.penalties * 100
 
-        scores.append(score)
+        if score > 0:
+            fitness = score / player.hScore
+        else:
+            fitness = 0
+        
+        scores.append(fitness)
     
     return scores
 
@@ -204,12 +208,12 @@ def crossover(population):
         for j in range(13):
             
             gene = random.randint(0, 10)
-            coin = random.randint(0, 1)
+            coin = random.uniform(0, 1)
 
-            if coin == 0:
-                child.insert(mother[gene].chromosomeSet()[j], mother[gene].hScore)
+            if coin < 0.5:
+                child.insert(mother[gene].chromosomeSet()[j], j)
             else:
-                child.insert(father[gene].chromosomeSet()[j], father[gene].hScore)
+                child.insert(father[gene].chromosomeSet()[j], j)
 
         newGeneration.append(child)
 
@@ -221,6 +225,8 @@ def mutation(population):
 
         for j in range(5):
             population[i].chromosomeSet()[random.randint(0, 60)] = random.randint(-1, 1)
+    
+    return population
 
 # Creating a population of chromosomes for the AIagent.
 population = []
@@ -259,24 +265,24 @@ while True:
 
     # Selection process of the 24 best agents to make children.
     x = 0
-    currentScores = fitness(population, results)
-    print(currentScores)
-    time.sleep(4)
+    currentFitness = fitness(population)
+    print(currentFitness)
+    time.sleep(5)
     while len(newGeneration) != 24:
 
         if x > 50 - len(newGeneration) - 1:
             x = 0
 
-        if currentScores[x] == max(currentScores):
+        if currentFitness[x] == max(currentFitness):
             newGeneration.append(population[x])
-            currentScores.remove(currentScores[x])
+            currentFitness.remove(currentFitness[x])
+        
         x += 1
 
-    print(len(newGeneration))
-    time.sleep(1)
-
     population = crossover(newGeneration)
-    
+    population = mutation(newGeneration)
+
+
     generation += 1
 
 
