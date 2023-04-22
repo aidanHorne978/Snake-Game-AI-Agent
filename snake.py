@@ -2,6 +2,7 @@
 import pygame
 import random
 import numpy as np
+import time
 
 # Initilizing
 pygame.init()
@@ -196,7 +197,7 @@ def MoveSnake(direction, snake, fruit):
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
 
-def SnakeGame(player, lastMove, fruit):
+def SnakeGame(player, lastMove, fruit, generation):
 
     ## Global variables.
     global fruits
@@ -204,6 +205,9 @@ def SnakeGame(player, lastMove, fruit):
     global score
     global background_colour
     global distance
+
+    if generation % 10 == 0 and generation != 0:
+        time.sleep(0.03)
 
     if len(player.body) < 1:
 
@@ -253,9 +257,13 @@ def SnakeGame(player, lastMove, fruit):
         return score, distance, False
         # GameOver()
 
+    if distance > 1000 and score < 5:
+        return 0, 0, False
+
     # This moves the snake at a certain time interval.
     # if clock.tick(6):
     MoveSnake(lastMove, player, fruits)
+    # time.sleep(0.01)
     distance += 1
     pygame.display.update()
 
