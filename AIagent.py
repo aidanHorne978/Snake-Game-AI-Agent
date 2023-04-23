@@ -167,7 +167,7 @@ def runGame(player, gen, lastMove, agent, fruit):
         # Keeps track of highest score.
         if evaluation[0] > player.hScore:
             player.hScore = evaluation[0]
-        if steps == 1000:
+        if steps == 500:
             return evaluation[0], evaluation[1], deaths
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
@@ -181,6 +181,8 @@ def runGame(player, gen, lastMove, agent, fruit):
         steps += 1
 
 def trainGen(population, generation):
+
+    bestAgent = [Player(np.zeros(0), 0, 0, 0, 0), 0]
 
     while True:
     
@@ -212,7 +214,21 @@ def trainGen(population, generation):
         print(currentFitness)
         print("Highest fitness: {}".format(max(currentFitness)))
         print()
-        while len(newGeneration) != 12:
+
+        # Finding the best agent throughout the whole training process
+        best = max(currentFitness)
+        bestIndex = currentFitness.index(best)
+
+        if currentFitness[bestIndex] > bestAgent[1]:
+            bestAgent[0] = population[bestIndex]
+
+        # Finding the average fitness so we aren't using inferior genes.
+        avgFitness = int(sum(currentFitness) / len(currentFitness))
+
+        while True:
+            
+            if max(currentFitness) < avgFitness:
+                break
 
             if x > 50 - len(newGeneration) - 1:
                 x = 0
@@ -228,7 +244,7 @@ def trainGen(population, generation):
 
         generation += 1
 
-    return population, currentFitness
+    return population, currentFitness, bestAgent
 
 def fitness(population):
 
@@ -253,6 +269,20 @@ def crossover(population):
     father = population[int(len(population) / 2):int(len(population) - 1)]
 
     newGeneration = []
+    mElite = population[0]
+    fElite = population[int(len(population) / 2)]
+
+    for player in mother:
+        if player.hScore > mElite.hScore:
+            mElite = player
+    
+    for player in father:
+        if player.hScore > fElite.hScore:
+            fElite = player
+
+    newGeneration.append(mElite)
+    newGeneration.append(fElite)
+
     while len(newGeneration) != 50:
 
         child = Player(np.array(mother[0].chromosomeSet()[0]), 0, 0, 0, 0)
@@ -272,11 +302,13 @@ def crossover(population):
 
 def mutation(population):
 
-    for i in range(len(population)):
+    prob = random.randint(0, 100)
 
-        for j in range(5):
-            population[i].chromosomeSet()[random.randint(0, 49)] = random.randint(-1, 1)
-    
+    if prob % 10 == 0:
+        for i in range(len(population)):
+            for j in range(random.randint(0, 10)):
+                population[i].chromosomeSet()[random.randint(0, 49)] = random.randint(-1, 1)
+        
     return population
 
 # Creating a population of chromosomes for the AIagent.
@@ -299,7 +331,16 @@ generation = 0
 results = trainGen(population, generation)
 
 # Pick the best Player in the population
+print(results[0][1])
+bestAgent = results[0][2]
 
+# Run game with best agent
+run = True
+while run == True:
+    runGame(bestAgent, 0, "left", agent = snake.Snake(width / 2 - 30, height / 2 - 60, []), fruit = snake.Fruit(0,0))
+    input = input("Do you want to play another?")
+    if input != "yes" or input != "y":
+        run = False
 
 # def UserControl():
     # If the user presses a key that is allowed it will remember the key for when the clock ticks and the snake is moved.
