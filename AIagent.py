@@ -4,6 +4,7 @@ import random
 import numpy as np
 import snake
 import time
+from sklearn import preprocessing
 
 # Basically wanna make a genetic algorithm that will have a bunch of chromosomes and will make its way to the fruit.
 # It's allowed to know where the fruit is but not how to get to it. It has to learn that
@@ -44,7 +45,7 @@ def make_prediction(input_vector, weights):
     layer2 = sigmoid(layer1)
     return layer2
 
-def makeMove(newPop, snake, lastMove):
+def makeMove(newPop, snake, lastMove, fruit):
 
     # Input nodes.
 
@@ -67,8 +68,11 @@ def makeMove(newPop, snake, lastMove):
         posFood[1] = 1
         posFood[3] = 1
     
-    # Distance from head of snake to food.
-    distFood = (snake.x - fruit.x, snake.y - fruit.y)
+    # Distance from head of snake to food with normalized values.
+    distValues = [(snake.x - fruit.x), (snake.x + fruit.x), (snake.y - fruit.y), (snake.y + fruit.y)]
+
+    distFood = np.array(distValues)
+    distFood = preprocessing.normalize([distFood])
 
     # Current direction aka lastMove variable
     wall = [0, 0, 0, 0]
@@ -102,8 +106,9 @@ def makeMove(newPop, snake, lastMove):
         input_vector = np.append(input_vector, currdirection[i])
         input_vector = np.append(input_vector, posFood[i])
 
-    input_vector = np.append(input_vector, int(distFood[0]))
-    input_vector = np.append(input_vector, int(distFood[1]))
+    input_vector = np.append(input_vector, distFood[0][0])
+    input_vector = np.append(input_vector, distFood[0][2])
+
 
     left = make_prediction(input_vector, newPop.chromosomeSet()[0:14])
     right = make_prediction(input_vector, newPop.chromosomeSet()[15:29])
@@ -114,15 +119,12 @@ def makeMove(newPop, snake, lastMove):
 
     return move
 
-def runGame(player, gen, lastMove):
+def runGame(player, gen, lastMove, agent, fruit):
 
     steps = 0
     deaths = 0
     oldScore = 0
     penalty = False
-
-    global agent
-    global fruit
 
     while True:
         
@@ -132,7 +134,7 @@ def runGame(player, gen, lastMove):
         elif agent.y < 20 or agent.y > 700:
             agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
 
-        move = makeMove(player, agent, lastMove)
+        move = makeMove(player, agent, lastMove, fruit)
 
         if move[0] == max(move):
             if lastMove != "right":
@@ -178,6 +180,56 @@ def runGame(player, gen, lastMove):
         pygame.display.update()
         steps += 1
 
+def trainGen(population, generation):
+
+    while True:
+    
+        if generation == 100:
+            break
+
+
+        print("Generation: {}".format(generation))
+        if generation == 100:
+            exit()
+        
+        newGeneration = []
+        for i in range(49):
+            agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
+            fruit = snake.Fruit(0,0)
+
+            # Output is (score, distance, death, avg_steps, penalties)
+            score = runGame(population[i], generation, lastMove, agent, fruit)
+
+            if population[i].hScore != 0:
+                population[i].avg_steps = int(population[i].avg_steps / population[i].hScore)
+
+            if population[i].hScore < score[0]:
+                population[i].setHigh(score[0])
+
+        # Selection process of the 24 best agents to make children.
+        x = 0
+        currentFitness = fitness(population)
+        print(currentFitness)
+        print("Highest fitness: {}".format(max(currentFitness)))
+        print()
+        while len(newGeneration) != 12:
+
+            if x > 50 - len(newGeneration) - 1:
+                x = 0
+
+            if currentFitness[x] == max(currentFitness):
+                newGeneration.append(population[x])
+                currentFitness.remove(currentFitness[x])
+        
+            x += 1
+        
+        population = crossover(newGeneration)
+        population = mutation(population)
+
+        generation += 1
+
+    return population, currentFitness
+
 def fitness(population):
 
     scores = []
@@ -189,7 +241,7 @@ def fitness(population):
         if score > 0:
             fitness = score
         else:
-            fitness = 0 + player.hScore * 20 + player.avg_steps
+            fitness = 0 + player.hScore * 20
         
         scores.append(fitness)
     
@@ -243,52 +295,10 @@ generation = 0
 # Run the main menu.
 # snake.MainMenu()
 
+# Train the first generation.
+results = trainGen(population, generation)
 
-while True:
-    
-    print("Generation: {}".format(generation))
-    if generation == 100:
-        exit()
-    results = []
-    newGeneration = []
-    currentScores = []
-    for i in range(49):
-        agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
-        fruit = snake.Fruit(0,0)
-
-        # Output is (score, distance, death, avg_steps, penalties)
-        try:
-            score = runGame(population[i], generation, lastMove)
-        except IndexError:
-            print(len(population))
-
-        if population[i].hScore != 0:
-            population[i].avg_steps = int(population[i].avg_steps / population[i].hScore)
-
-        if population[i].hScore < score[0]:
-            population[i].setHigh(score[0])
-
-    # Selection process of the 24 best agents to make children.
-    x = 0
-    currentFitness = fitness(population)
-    print(currentFitness)
-    print()
-    time.sleep(5)
-    while len(newGeneration) != 12:
-
-        if x > 50 - len(newGeneration) - 1:
-            x = 0
-
-        if currentFitness[x] == max(currentFitness):
-            newGeneration.append(population[x])
-            currentFitness.remove(currentFitness[x])
-    
-        x += 1
-
-    population = crossover(newGeneration)
-    population = mutation(population)
-
-    generation += 1
+# Pick the best Player in the population
 
 
 # def UserControl():
