@@ -14,8 +14,7 @@ class Player:
     def __init__(self, hScore, deaths, penalties, avg_steps, distance):
         
         # Initilizing with the size of the chromosomes.
-        chromosome = np.zeros(70)
-        self.chromosome = chromosome
+        self.chromosomes = np.zeros(30720)
 
         # Player's high score in training.
         self.hScore = hScore
@@ -38,7 +37,7 @@ class Player:
 
     # Initilizes the chromosomes for a player.
     def createPopulation(self):
-        self.chromosome = np.random.uniform(-1, 1, 70)
+        self.chromosome = np.random.uniform(-1, 1, 30720)
     
     # Prints the population for debugging.
     def displayPopulation(self):
@@ -55,10 +54,13 @@ class Player:
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-def make_prediction(input_vector, weights):
-    layer1 = np.dot(input_vector[1:], weights) + input_vector[0]
-    layer2 = sigmoid(layer1)
-    return layer2
+def make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_output, bias):
+
+    layer1 = np.dot(input_vector, input_to_layer1) + bias
+    layer2 = sigmoid(np.dot(layer1, layer1_to_layer2)) + bias
+    layer3 = sigmoid(np.dot(layer2, layer2_to_layer3))
+    output_layer = np.dot(layer3, layer3_to_output)
+    return output_layer
 
 def makeMove(newPop, snake, lastMove, fruit):
 
@@ -108,20 +110,23 @@ def makeMove(newPop, snake, lastMove, fruit):
     else:
         currdirection[3] = 1
 
-    input_vector = np.array(3)
+    input_vector = np.array(wall[0])
+
+    for i in range(3):
+        input_vector = np.append(input_vector, wall[i])
 
     for i in range(4):
-        input_vector = np.append(input_vector, wall[i])
         input_vector = np.append(input_vector, currdirection[i])
         input_vector = np.append(input_vector, posFood[i])
 
+    # Chromosomes split for left.
+    input_to_layer1 = newPop.chromosome[0:1440].reshape(12, 120)
+    input_to_layer1[:, 0] = input_vector
+    layer1_to_layer2 = newPop.chromosome[1440:15840].reshape(120, 120)
+    layer2_to_layer3 = newPop.chromosome[15841:30241].reshape(120, 120)
+    layer3_to_output = newPop.chromosome[30240:30720].reshape(120, 4)
 
-    left = make_prediction(input_vector, newPop.chromosomeSet()[0:12])
-    right = make_prediction(input_vector, newPop.chromosomeSet()[15:27])
-    up = make_prediction(input_vector, newPop.chromosomeSet()[30:42])
-    down = make_prediction(input_vector, newPop.chromosomeSet()[45:57])
-
-    move = left, right, up, down
+    move = make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_output, 0.1)
 
     return move
 
@@ -208,7 +213,7 @@ def crossover(population):
 
     newGeneration = []
 
-    for i in range(6):
+    for i in range(3):
         newGeneration.append(population[i])
 
     while len(newGeneration) != 50:
@@ -234,9 +239,11 @@ def mutation(population):
     prob = random.randint(0, 100)
 
     if prob % 10 == 0:
+        range = random.randint(0, 34), random.randint(35, 69)
         for i in range(len(population)):
-            for j in range(random.randint(0, 10)):
-                population[i].chromosomeSet()[random.randint(0, 49)] = random.randint(-1, 1)
+            for j in range(random.randint(0, 25)):
+                population[i].chromosomeSet()[range[0]:range[1]] = random.randint(-1, 1)
+        print("mutated", range)
         
     return population
 
@@ -252,7 +259,6 @@ def trainGen(population, generation):
             exit()
         
         newGeneration = []
-
         for i in range(49):
             agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
             fruit = snake.Fruit(0,0)
