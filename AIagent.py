@@ -14,7 +14,7 @@ class Player:
     def __init__(self, hScore, deaths, penalties, avg_steps, distance):
         
         # Initilizing with the size of the chromosomes.
-        self.chromosomes = np.zeros(30720)
+        self.chromosome = np.zeros(32002)
 
         # Player's high score in training.
         self.hScore = hScore
@@ -37,7 +37,7 @@ class Player:
 
     # Initilizes the chromosomes for a player.
     def createPopulation(self):
-        self.chromosome = np.random.uniform(-1, 1, 30720)
+        self.chromosome = np.random.uniform(-1, 1, 32002)
     
     # Prints the population for debugging.
     def displayPopulation(self):
@@ -56,10 +56,10 @@ def sigmoid(x):
 
 def make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_output, bias):
 
-    layer1 = np.dot(input_vector, input_to_layer1) + bias
+    layer1 = np.dot(input_vector, input_to_layer1)
     layer2 = sigmoid(np.dot(layer1, layer1_to_layer2)) + bias
-    layer3 = sigmoid(np.dot(layer2, layer2_to_layer3))
-    output_layer = np.dot(layer3, layer3_to_output)
+    layer3 = sigmoid(np.dot(layer2, layer2_to_layer3)) + bias
+    output_layer = np.dot(layer3, layer3_to_output) + bias
     return output_layer
 
 def makeMove(newPop, snake, lastMove, fruit):
@@ -86,7 +86,9 @@ def makeMove(newPop, snake, lastMove, fruit):
         posFood[3] = 1
 
     # Current direction aka lastMove variable
-    wall = [0, 0, 0, 0]
+
+    wall = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
     # wall on left
     if snake.x - 20 == 20:
         wall[0] = 1
@@ -99,6 +101,32 @@ def makeMove(newPop, snake, lastMove, fruit):
     # wall up
     elif snake.y + 20 == 700:
         wall[3] = 1
+
+    # wall on left
+    if snake.x - 40 == 20:
+        wall[4] = 0.75
+    # wall on right
+    elif snake.x + 40 == 860:
+        wall[5] = 0.75
+    # wall down
+    elif snake.y - 40 == 20:
+        wall[6] = 0.75
+    # wall up
+    elif snake.y + 40 == 700:
+        wall[7] = 0.75
+
+    # wall on left
+    if snake.x - 60 == 20:
+        wall[8] = 0.5
+    # wall on right
+    elif snake.x + 60 == 860:
+        wall[9] = 0.5
+    # wall down
+    elif snake.y - 60 == 20:
+        wall[10] = 0.5
+    # wall up
+    elif snake.y + 60 == 700:
+        wall[11] = 0.5
     
     currdirection = [0, 0, 0, 0]
     if lastMove == "left":
@@ -112,19 +140,22 @@ def makeMove(newPop, snake, lastMove, fruit):
 
     input_vector = np.array(wall[0])
 
-    for i in range(3):
+    for i in range(1, 10):
         input_vector = np.append(input_vector, wall[i])
 
     for i in range(4):
         input_vector = np.append(input_vector, currdirection[i])
         input_vector = np.append(input_vector, posFood[i])
 
+    input_vector = np.append(input_vector, fruit.x - snake.x)
+    input_vector = np.append(input_vector, fruit.y - snake.y)
+
     # Chromosomes split for left.
-    input_to_layer1 = newPop.chromosome[0:1440].reshape(12, 120)
+    input_to_layer1 = newPop.chromosome[0:2640].reshape(22, 120)
     input_to_layer1[:, 0] = input_vector
-    layer1_to_layer2 = newPop.chromosome[1440:15840].reshape(120, 120)
-    layer2_to_layer3 = newPop.chromosome[15841:30241].reshape(120, 120)
-    layer3_to_output = newPop.chromosome[30240:30720].reshape(120, 4)
+    layer1_to_layer2 = newPop.chromosome[2640:17080].reshape(120, 120)
+    layer2_to_layer3 = newPop.chromosome[17081:31521].reshape(120, 120)
+    layer3_to_output = newPop.chromosome[31522:32002].reshape(120, 4)
 
     move = make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_output, 0.1)
 
@@ -196,7 +227,7 @@ def runGame(player, gen, lastMove, agent, fruit):
         pygame.display.update()
         steps += 1
 
-def fitness(population, generation):
+def fitness(population):
 
     scores = []
 
@@ -220,7 +251,7 @@ def crossover(population):
 
         child = Player(0, 0, 0, 0, 0)
 
-        for j in range(0, 70):
+        for j in range(0, len(population[0].chromosome)):
             
             coin = np.random.uniform(-1, 1, 1)
             gene = random.randint(0, len(mother) - 1)
@@ -239,8 +270,8 @@ def mutation(population):
     prob = random.randint(0, 100)
 
     if prob % 10 == 0:
-        range = random.randint(0, 34), random.randint(35, 69)
-        for i in range(len(population)):
+        range = random.randint(0, len(population[0].chromosome) / 2), random.randint(len(population[0].chromosome) / 2, len(population[0].chromosome))
+        for i in range(random.randint(0, len(population[0].chromosome))):
             for j in range(random.randint(0, 25)):
                 population[i].chromosomeSet()[range[0]:range[1]] = random.randint(-1, 1)
         print("mutated", range)
@@ -274,7 +305,7 @@ def trainGen(population, generation):
 
         # Selection process of the 24 best agents to make children.
         x = 0
-        currentFitness = fitness(population, generation)
+        currentFitness = fitness(population)
         print(currentFitness)
         print("Highest fitness: {}".format(max(currentFitness)))
         print()
