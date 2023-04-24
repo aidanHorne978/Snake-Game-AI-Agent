@@ -6,34 +6,49 @@ import snake
 import time
 from sklearn import preprocessing
 
-# Basically wanna make a genetic algorithm that will have a bunch of chromosomes and will make its way to the fruit.
-# It's allowed to know where the fruit is but not how to get to it. It has to learn that
-
 # Need to be aware that i need to be able to run multiple AIagent's with multithreading processing so it doesn't take years to learn.
 
 
 class Player:
 
-    def __init__(self, chromosome, hScore, deaths, penalties, avg_steps):
+    def __init__(self, chromosome, hScore, deaths, penalties, avg_steps, distance):
+        
+        # Initilizing with the size of the chromosomes.
         chromosome = np.zeros(70)
         self.chromosome = chromosome
+
+        # Player's high score in training.
         self.hScore = hScore
+
+        # Amount of deaths in training.
         self.deaths = deaths
+
+        # Penalties received during training.
         self.penalties = penalties
+
+        # Average steps during training.
         self.avg_steps = avg_steps
 
+        # Distance travelled during training.
+        self.distance = distance
+
+    # Insert a chromosome at a certain index.
     def insert(self, value, index):
         self.chromosome[index] = value
 
+    # Initilizes the chromosomes for a player.
     def createPopulation(self):
         self.chromosome = np.random.uniform(-1, 1, 70)
     
+    # Prints the population for debugging.
     def displayPopulation(self):
         return print("{}".format(self.chromosome))
 
+    # Returns the players chromosome set.
     def chromosomeSet(self):
         return self.chromosome
 
+    # Sets the highscore of a player.
     def setHigh(self, score):
         self.hScore = score
 
@@ -67,26 +82,20 @@ def makeMove(newPop, snake, lastMove, fruit):
     else:
         posFood[1] = 1
         posFood[3] = 1
-    
-    # Distance from head of snake to food with normalized values.
-    distValues = [(snake.x - fruit.x), (snake.x + fruit.x), (snake.y - fruit.y), (snake.y + fruit.y)]
-
-    distFood = np.array(distValues)
-    distFood = preprocessing.normalize([distFood])
 
     # Current direction aka lastMove variable
     wall = [0, 0, 0, 0]
     # wall on left
-    if snake.x - 20 == 20:
+    if snake.x - 60 == 20:
         wall[0] = 1
     # wall on right
-    elif snake.x + 20 == 860:
+    elif snake.x + 60 == 860:
         wall[1] = 1
     # wall down
-    elif snake.y - 20 == 20:
+    elif snake.y - 60 == 20:
         wall[2] = 1
     # wall up
-    else:
+    elif snake.y + 60 == 700:
         wall[3] = 1
     
     currdirection = [0, 0, 0, 0]
@@ -106,14 +115,11 @@ def makeMove(newPop, snake, lastMove, fruit):
         input_vector = np.append(input_vector, currdirection[i])
         input_vector = np.append(input_vector, posFood[i])
 
-    input_vector = np.append(input_vector, distFood[0][0])
-    input_vector = np.append(input_vector, distFood[0][2])
 
-
-    left = make_prediction(input_vector, newPop.chromosomeSet()[0:14])
-    right = make_prediction(input_vector, newPop.chromosomeSet()[15:29])
-    up = make_prediction(input_vector, newPop.chromosomeSet()[30:44])
-    down = make_prediction(input_vector, newPop.chromosomeSet()[45:59])
+    left = make_prediction(input_vector, newPop.chromosomeSet()[0:12])
+    right = make_prediction(input_vector, newPop.chromosomeSet()[15:27])
+    up = make_prediction(input_vector, newPop.chromosomeSet()[30:42])
+    down = make_prediction(input_vector, newPop.chromosomeSet()[45:57])
 
     move = left, right, up, down
 
@@ -161,9 +167,13 @@ def runGame(player, gen, lastMove, agent, fruit):
             penalty = True
             player.avg_steps += steps
 
+        # Keeps track of the players steps throughout training.
+        player.distance += evaluation[1]
+
         # Keeps track of deaths.
         if evaluation[2] == False:
             player.deaths += 1
+
         # Keeps track of highest score.
         if evaluation[0] > player.hScore:
             player.hScore = evaluation[0]
@@ -180,15 +190,73 @@ def runGame(player, gen, lastMove, agent, fruit):
         pygame.display.update()
         steps += 1
 
+def fitness(population):
+
+    scores = []
+
+    # Initial fitness function to try make the snake value survival.
+    for player in population:
+        score = player.hScore * 5000 + player.distance - player.deaths - player.avg_steps - player.penalties
+        scores.append(score)
+        
+    return scores
+
+def crossover(population):
+
+    print(len(population))
+    mother = population[0:int(len(population) / 2 - 1)]
+    father = population[int(len(population) / 2):int(len(population) - 1)]
+
+    newGeneration = []
+    mElite = population[0]
+    fElite = population[int(len(population) / 2)]
+
+    for player in mother:
+        if player.hScore > mElite.hScore:
+            mElite = player
+    
+    for player in father:
+        if player.hScore > fElite.hScore:
+            fElite = player
+
+    newGeneration.append(Player(np.array(mElite.chromosomeSet()), 0, 0, 0, 0, 0))
+    newGeneration.append(Player(np.array(fElite.chromosomeSet()), 0, 0, 0, 0, 0))
+
+    while len(newGeneration) != 50:
+        child = Player(np.array(np.random.uniform(-1, 1, 1)), 0, 0, 0, 0, 0)
+        for j in range(1, len(mother) - 1):
+            
+            gene = random.randint(0, int(len(mother) / 2))
+            coin = random.uniform(0, 1)
+
+            if coin < 0.5:
+                child.insert(mother[gene].chromosomeSet()[j], j)
+            else:
+                child.insert(father[gene].chromosomeSet()[j], j)
+
+        newGeneration.append(child)
+
+    return newGeneration
+
+def mutation(population):
+
+    prob = random.randint(0, 100)
+
+    if prob % 10 == 0:
+        for i in range(len(population)):
+            for j in range(random.randint(0, 10)):
+                population[i].chromosomeSet()[random.randint(0, 49)] = random.randint(-1, 1)
+        
+    return population
+
 def trainGen(population, generation):
 
-    bestAgent = [Player(np.zeros(0), 0, 0, 0, 0), 0]
+    bestAgent = [Player(np.zeros(0), 0, 0, 0, 0, 0), 0]
 
     while True:
     
         if generation == 100:
             break
-
 
         print("Generation: {}".format(generation))
         if generation == 100:
@@ -216,28 +284,23 @@ def trainGen(population, generation):
         print()
 
         # Finding the best agent throughout the whole training process
-        best = max(currentFitness)
-        bestIndex = currentFitness.index(best)
+        # best = max(currentFitness)
+        # bestIndex = currentFitness.index(best)
 
-        if currentFitness[bestIndex] > bestAgent[1]:
-            bestAgent[0] = population[bestIndex]
+        # if currentFitness[bestIndex] > bestAgent[1]:
+        #     bestAgent[0] = population[bestIndex]
 
-        # Finding the average fitness so we aren't using inferior genes.
-        avgFitness = int(sum(currentFitness) / len(currentFitness))
-
-        while True:
-            
-            if max(currentFitness) < avgFitness:
-                break
-
-            if x > 50 - len(newGeneration) - 1:
-                x = 0
-
-            if currentFitness[x] == max(currentFitness):
-                newGeneration.append(population[x])
-                currentFitness.remove(currentFitness[x])
-        
+        fitnessDict = dict()
+        for player in population:
+            fitnessDict[currentFitness[x]] = player
             x += 1
+        x = 0
+
+        fitnessDict = sorted(fitnessDict.items(), reverse=True)
+        fitnessDict = dict(fitnessDict)
+
+        for i in range(12):
+            newGeneration.append(list(fitnessDict.values())[i])
         
         population = crossover(newGeneration)
         population = mutation(population)
@@ -246,75 +309,10 @@ def trainGen(population, generation):
 
     return population, currentFitness, bestAgent
 
-def fitness(population):
-
-    scores = []
-    
-    for player in population:
-
-        score = player.hScore * 5000 - player.deaths * 50 - player.avg_steps * 10 - player.penalties * 100
-
-        if score > 0:
-            fitness = score
-        else:
-            fitness = 0 + player.hScore * 20
-        
-        scores.append(fitness)
-    
-    return scores
-
-def crossover(population):
-
-    mother = population[0:int(len(population) / 2 - 1)]
-    father = population[int(len(population) / 2):int(len(population) - 1)]
-
-    newGeneration = []
-    mElite = population[0]
-    fElite = population[int(len(population) / 2)]
-
-    for player in mother:
-        if player.hScore > mElite.hScore:
-            mElite = player
-    
-    for player in father:
-        if player.hScore > fElite.hScore:
-            fElite = player
-
-    newGeneration.append(mElite)
-    newGeneration.append(fElite)
-
-    while len(newGeneration) != 50:
-
-        child = Player(np.array(mother[0].chromosomeSet()[0]), 0, 0, 0, 0)
-        for j in range(1, len(mother) - 1):
-            
-            gene = random.randint(0, int(len(mother) / 2))
-            coin = random.uniform(0, 1)
-
-            if coin < 0.5:
-                child.insert(mother[gene].chromosomeSet()[j], j)
-            else:
-                child.insert(father[gene].chromosomeSet()[j], j)
-
-        newGeneration.append(child)
-
-    return newGeneration
-
-def mutation(population):
-
-    prob = random.randint(0, 100)
-
-    if prob % 10 == 0:
-        for i in range(len(population)):
-            for j in range(random.randint(0, 10)):
-                population[i].chromosomeSet()[random.randint(0, 49)] = random.randint(-1, 1)
-        
-    return population
-
 # Creating a population of chromosomes for the AIagent.
 population = []
 for i in range(50):
-    population.append(Player(np.zeros(0), 0, 0, 0, 0))
+    population.append(Player(np.zeros(0), 0, 0, 0, 0, 0))
     population[i].createPopulation()
 
 # Initilizing variables.
