@@ -241,21 +241,6 @@ def SnakeGame(player, lastMove, fruit, generation):
         scoreValue = smallfont.render(str(score), True, BLACK)
         screen.blit(scoreTitle, (center[0] - 75, center[1] + 330))
         screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
-            
-    # If the snake hit's itself.
-    if len(player.body) > 2:
-        for parts in player.body[1:]:
-            if player.x == parts.x and player.y == parts.y:
-                return score, distance, False
-                # GameOver()
-
-    if player.x < 20 or player.x > 860:
-        return score, distance, False
-        # GameOver()
-
-    if player.y < 20 or player.y > 700:
-        return score, distance, False
-        # GameOver()
 
     # This moves the snake at a certain time interval.
     # if clock.tick(6):
@@ -284,7 +269,23 @@ def SnakeGame(player, lastMove, fruit, generation):
     
         pygame.display.update()
 
-    return score, distance, True
+    # If the snake hit's itself.
+    if len(player.body) > 2:
+        for parts in player.body[1:]:
+            if player.x == parts.x and player.y == parts.y:
+                return score, distance, False
+                # GameOver()
+
+    if player.x < 20 or player.x > 860:
+        return score, distance, False
+        # GameOver()
+
+    elif player.y < 20 or player.y > 700:
+        return score, distance, False
+        # GameOver()
+
+    else:
+        return score, distance, True
 
 def GameOver():
 
