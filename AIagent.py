@@ -4,14 +4,14 @@ import random
 import numpy as np
 import snake
 import time
-from sklearn import preprocessing
+from multiprocessing import Process
 
 # Need to be aware that i need to be able to run multiple AIagent's with multithreading processing so it doesn't take years to learn.
 
 
 class Player:
 
-    def __init__(self, chromosome, hScore, deaths, penalties, avg_steps, distance):
+    def __init__(self, hScore, deaths, penalties, avg_steps, distance):
         
         # Initilizing with the size of the chromosomes.
         chromosome = np.zeros(70)
@@ -86,16 +86,16 @@ def makeMove(newPop, snake, lastMove, fruit):
     # Current direction aka lastMove variable
     wall = [0, 0, 0, 0]
     # wall on left
-    if snake.x - 60 == 20:
+    if snake.x - 20 == 20:
         wall[0] = 1
     # wall on right
-    elif snake.x + 60 == 860:
+    elif snake.x + 20 == 860:
         wall[1] = 1
     # wall down
-    elif snake.y - 60 == 20:
+    elif snake.y - 20 == 20:
         wall[2] = 1
     # wall up
-    elif snake.y + 60 == 700:
+    elif snake.y + 20 == 700:
         wall[3] = 1
     
     currdirection = [0, 0, 0, 0]
@@ -178,7 +178,7 @@ def runGame(player, gen, lastMove, agent, fruit):
         if evaluation[0] > player.hScore:
             player.hScore = evaluation[0]
 
-        if steps == 500:
+        if steps == 1000:
             return evaluation[0], evaluation[1], deaths
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
@@ -195,47 +195,32 @@ def fitness(population, generation):
 
     scores = []
 
-    # Initial fitness function to try make the snake value survival.
-    if generation < 5:
-        for player in population:
-            score = player.distance
-            scores.append(score)
-    else:
-        for player in population:
-            score = player.hScore * 5000 - player.deaths * 150 - player.avg_steps * 100 - player.penalties * 1000
-            scores.append(score)
+    for player in population:
+        score = player.hScore * 5000 - player.deaths * 150 - player.avg_steps * 100 - player.penalties * 1000
+        scores.append(score)
 
     return scores
 
 def crossover(population):
 
-    print(len(population))
     mother = population[0:int(len(population) / 2 - 1)]
     father = population[int(len(population) / 2):int(len(population) - 1)]
 
     newGeneration = []
-    # mElite = population[0]
-    # fElite = population[int(len(population) / 2)]
-
-    # for player in mother:
-    #     if player.hScore > mElite.hScore:
-    #         mElite = player
-    
-    # for player in father:
-    #     if player.hScore > fElite.hScore:
-    #         fElite = player
 
     for i in range(6):
         newGeneration.append(population[i])
 
     while len(newGeneration) != 50:
-        child = Player(np.array(np.random.uniform(-1, 1, 1)), 0, 0, 0, 0, 0)
-        for j in range(1, len(mother) - 1):
-            
-            gene = random.randint(0, int(len(mother) / 2))
-            coin = random.uniform(0, 1)
 
-            if coin < 0.5:
+        child = Player(0, 0, 0, 0, 0)
+
+        for j in range(0, 70):
+            
+            coin = np.random.uniform(-1, 1, 1)
+            gene = random.randint(0, len(mother) - 1)
+
+            if coin < 0:
                 child.insert(mother[gene].chromosomeSet()[j], j)
             else:
                 child.insert(father[gene].chromosomeSet()[j], j)
@@ -267,6 +252,7 @@ def trainGen(population, generation):
             exit()
         
         newGeneration = []
+
         for i in range(49):
             agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
             fruit = snake.Fruit(0,0)
@@ -302,8 +288,9 @@ def trainGen(population, generation):
             
             newGeneration.append(list(fitnessDict.values())[i])
         
-        # population = crossover(newGeneration)
-        # population = mutation(population)
+        population = crossover(newGeneration)
+        if generation > 30:
+            population = mutation(population)
 
         generation += 1
 
@@ -312,7 +299,7 @@ def trainGen(population, generation):
 # Creating a population of chromosomes for the AIagent.
 population = []
 for i in range(50):
-    population.append(Player(np.zeros(0), 0, 0, 0, 0, 0))
+    population.append(Player(0, 0, 0, 0, 0))
     population[i].createPopulation()
 
 # Initilizing variables.
