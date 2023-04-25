@@ -307,6 +307,8 @@ def trainGen(population, generation):
 
         print(sorted(currentFitness))
         print()
+        print("Current Max: {}".format(max(currentFitness)))
+        print()
 
         fitnessDict = dict()
         
