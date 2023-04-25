@@ -6,3 +6,7 @@ This repository contains the code for my Snake Game AI project. The AI agent use
 Currently, the agent has a 12 neuron input layer, 3 hidden layers of 120 neurons, and a 4 output neuron layer that contains the probability for each direction.
 
 By the end of this project I want the user to be able to train up a snake and then vs them in a battle to see who wins.
+
+Sites that helped:
+https://davideliu.com/2020/02/03/teaching-ai-to-play-snake-with-genetic-algorithm/
+https://www.sitepoint.com/python-multiprocessing-parallel-programming/
