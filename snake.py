@@ -1,7 +1,8 @@
+#!/usr/bin/python
 import pygame
 import random
-
-## Global Variables
+import numpy as np
+import time
 
 # Initilizing
 pygame.init()
@@ -31,6 +32,10 @@ width = screen.get_width()
 height = screen.get_height()
 center = screen.get_rect().center
 
+# Keep track of what direction and when the snake should move.
+clock = pygame.time.Clock()
+distance = 0
+
 # Snake class
 class Snake:
 
@@ -44,6 +49,12 @@ class Snake:
 
     def draw(self):
         return pygame.Rect(self.x, self.y, blockSize, blockSize)
+
+    def board(self):
+        board = np.zeros((900 // blockSize, 800 // blockSize))
+        print(len(board))
+        return board
+
 
 class Fruit:
 
@@ -89,7 +100,7 @@ def MainMenu():
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
-                return
+                return 1
 
         # To find where the mouse is at all times.
         mouse = pygame.mouse.get_pos()
@@ -188,105 +199,95 @@ def MoveSnake(direction, snake, fruit):
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
 
-def SnakeGame():
+def SnakeGame(player, lastMove, fruit, generation):
 
-    # Creating the screen.
-    background_colour = pygame.Color("#8fcb9e")
-    res = (900, 800)
-    screen = pygame.display.set_mode(res)
-    pygame.display.set_caption('Snake Game')
-    screen.fill(background_colour)
-    pygame.display.flip()
+    ## Global variables.
+    global fruits
+    global screen
+    global score
+    global background_colour
+    global distance
 
-    # Keep track of what direction and when the snake should move.
-    clock = pygame.time.Clock()
-    lastMove = "left"
+    # if generation % 10 == 0 and generation != 0:
+    #     time.sleep(0.03)
 
-    # Drawing the grid.
-    DrawGrid(screen)
+    if len(player.body) < 1:
 
-    # Draws the grid for the game and the fruit.
-    fruit = Fruit(0,0)
-    fruit.generateFruit()
-    snake = Snake(width / 2 - 30, height / 2 - 60, [])
-    pygame.draw.rect(screen, BLACK, snake.draw())
-    fruit.drawFruit()
+        # Creating the screen.
+        background_colour = pygame.Color("#8fcb9e")
+        res = (900, 800)
+        screen = pygame.display.set_mode(res)
+        pygame.display.set_caption('Snake Game')
+        screen.fill(background_colour)
+        pygame.display.flip()
 
-    # Head of snake.
-    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
+        # Drawing the grid.
+        DrawGrid(screen)
 
-    # Tail of snake.
-    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
+        # Draws the grid for the game and the fruit.
+        fruits = fruit
+        fruits.generateFruit()
+        pygame.draw.rect(screen, BLACK, player.draw())
+        fruits.drawFruit()
+        distance = 0
 
-    # Score variable.
-    score = 0
-    scoreTitle = smallfont.render('score:' , True , BLACK)
-    scoreValue = smallfont.render(str(score), True, BLACK)
-    screen.blit(scoreTitle, (center[0] - 75, center[1] + 330))
-    screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+        # Head of snake.
+        player.body.append(pygame.Rect(player.x, player.y, blockSize, blockSize))
 
-    while True:
-        
+        # Tail of snake.
+        player.body.append(pygame.Rect(player.x, player.y, blockSize, blockSize))
+
+        # Score variable.
+        score = 0
+        scoreTitle = smallfont.render('score:' , True , BLACK)
+        scoreValue = smallfont.render(str(score), True, BLACK)
+        screen.blit(scoreTitle, (center[0] - 75, center[1] + 330))
+        screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+
+    # This moves the snake at a certain time interval.
+    # if clock.tick(6):
+    MoveSnake(lastMove, player, fruits)
+    # time.sleep(0.01)
+    distance += 1
+    pygame.display.update()
+
+    # When you get a fruit it will replace it with another randomly generated fruit.
+    # Then it will add one to the score and display it.
+    if player.x == fruits.pos()[0] and player.y == fruits.pos()[1]:
+
+        # Adds a part to the body.
+        Grow(player, lastMove)
+
+        # Generate a new fruit.
+        fruits.generateFruit()
+
+        # Increase score by one.
+        score += 1
+
+        # Erase the old score and put in the new score.
+        scoreValue = smallfont.render(str(score), True, BLACK)
+        screen.fill(background_colour, (center[0] + 15, center[1] + 330, 100, 100))
+        screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+    
         pygame.display.update()
 
-        # If the snake hit's itself.
-        if len(snake.body) > 2:
-            for parts in snake.body[1:]:
-                if snake.x == parts.x and snake.y == parts.y:
-                    GameOver()
+    # If the snake hit's itself.
+    if len(player.body) > 2:
+        for parts in player.body[1:]:
+            if player.x == parts.x and player.y == parts.y:
+                return score, distance, False
+                # GameOver()
 
-        if snake.x < 20 or snake.x > 860:
-            GameOver()
+    if player.x < 20 or player.x > 860:
+        return score, distance, False
+        # GameOver()
 
-        if snake.y < 20 or snake.y > 700:
-            GameOver()
+    elif player.y < 20 or player.y > 700:
+        return score, distance, False
+        # GameOver()
 
-
-        # Close screen if user clicks quit or the red arrow in the top right corner.
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-            
-            # If the user presses a key that is allowed it will remember the key for when the clock ticks and the snake is moved.
-            if event.type == pygame.KEYDOWN:
-                pygame.draw.rect(screen, pygame.Color(GRASS), snake.draw())
-                pygame.draw.rect(screen, BLACK, snake.draw(), 1)
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    if lastMove != "right":
-                        lastMove = "left"
-                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    if lastMove != "left":
-                        lastMove = "right"
-                if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    if lastMove != "down":
-                        lastMove = "up"
-                if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    if lastMove != "up":
-                        lastMove = "down"
-
-        # This moves the snake at a certain time interval.
-        if clock.tick(6):
-            MoveSnake(lastMove, snake, fruit)
-            pygame.display.update()
-
-        # When you get a fruit it will replace it with another randomly generated fruit.
-        # Then it will add one to the score and display it.
-        if snake.x == fruit.pos()[0] and snake.y == fruit.pos()[1]:
-
-            # Adds a part to the body.
-            Grow(snake, lastMove)
-
-            # Generate a new fruit.
-            fruit.generateFruit()
-            
-            # Increase score by one.
-            score += 1
-
-            # Erase the old score and put in the new score.
-            scoreValue = smallfont.render(str(score), True, BLACK)
-            screen.fill(background_colour, (center[0] + 15, center[1] + 330, 100, 100))
-            screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+    else:
+        return score, distance, True
 
 def GameOver():
 
@@ -310,7 +311,9 @@ def GameOver():
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
-                SnakeGame()
+                pygame.quit()
+                exit()
+                # SnakeGame()
 
         # To find where the mouse is at all times.
         mouse = pygame.mouse.get_pos()
@@ -345,9 +348,9 @@ def GameOver():
         # updates the frames of the game 
         pygame.display.update() 
 
-# Runs the main menu.
-MainMenu()
+# # Runs the main menu.
+# MainMenu()
 
-# Once user clicks "start", the main menu will close and the code then runs the game
-# and will keep running until the user closes the game.
-SnakeGame()
+# # Once user clicks "start", the main menu will close and the code then runs the game
+# # and will keep running until the user closes the game.
+# SnakeGame()
