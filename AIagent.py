@@ -7,14 +7,14 @@ import time
 from multiprocessing import Process
 
 # Need to be aware that i need to be able to run multiple AIagent's with multithreading processing so it doesn't take years to learn.
-
+# Might not be more efficient but will have to test.
 
 class Player:
 
     def __init__(self, hScore, deaths, penalties, avg_steps, distance):
         
         # Initilizing with the size of the chromosomes.
-        self.chromosome = np.zeros(32002)
+        self.chromosome = np.zeros(46122)
 
         # Player's high score in training.
         self.hScore = hScore
@@ -37,7 +37,7 @@ class Player:
 
     # Initilizes the chromosomes for a player.
     def createPopulation(self):
-        self.chromosome = np.random.uniform(-1, 1, 32002)
+        self.chromosome = np.random.uniform(-1, 1, 46122)
     
     # Prints the population for debugging.
     def displayPopulation(self):
@@ -54,12 +54,13 @@ class Player:
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-def make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_output, bias):
+def make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_layer4, layer3_to_output, bias):
 
     layer1 = np.dot(input_vector, input_to_layer1)
-    layer2 = sigmoid(np.dot(layer1, layer1_to_layer2)) + bias
-    layer3 = sigmoid(np.dot(layer2, layer2_to_layer3)) + bias
-    output_layer = np.dot(layer3, layer3_to_output) + bias
+    layer2 = sigmoid(np.dot(layer1, layer1_to_layer2) + bias)
+    layer3 = sigmoid(np.dot(layer2, layer2_to_layer3) + bias)
+    layer4 = sigmoid(np.dot(layer3, layer3_to_layer4) + bias)
+    output_layer = np.dot(layer4, layer3_to_output) + bias
     return output_layer
 
 def makeMove(newPop, snake, lastMove, fruit):
@@ -69,19 +70,19 @@ def makeMove(newPop, snake, lastMove, fruit):
     # Relative position of food to the head of the snake.
     posFood = [0, 0, 0, 0]
     # If food is up and left
-    if snake.x < fruit.x and snake.y < fruit.y:
+    if snake.x > fruit.x and snake.y < fruit.y:
         posFood[0] = 1
         posFood[2] = 1
     # if food is down and left
-    elif snake.x < fruit.x and snake.y > fruit.y:
+    elif snake.x > fruit.x and snake.y > fruit.y:
         posFood[0] = 1
         posFood[3] = 1
     # if food is up and right
-    elif snake.x > fruit.x and snake.y < fruit.y:
+    elif snake.x < fruit.x and snake.y < fruit.y:
         posFood[1] = 1
         posFood[2] = 1
     # if food is down and right
-    else:
+    elif snake.x < fruit.y and snake.y > fruit.y:
         posFood[1] = 1
         posFood[3] = 1
 
@@ -147,17 +148,15 @@ def makeMove(newPop, snake, lastMove, fruit):
         input_vector = np.append(input_vector, currdirection[i])
         input_vector = np.append(input_vector, posFood[i])
 
-    input_vector = np.append(input_vector, fruit.x - snake.x)
-    input_vector = np.append(input_vector, fruit.y - snake.y)
-
-    # Chromosomes split for left.
-    input_to_layer1 = newPop.chromosome[0:2640].reshape(22, 120)
+    # Chromosomes split.
+    input_to_layer1 = newPop.chromosome[0:2160].reshape(18, 120)
     input_to_layer1[:, 0] = input_vector
-    layer1_to_layer2 = newPop.chromosome[2640:17080].reshape(120, 120)
-    layer2_to_layer3 = newPop.chromosome[17081:31521].reshape(120, 120)
-    layer3_to_output = newPop.chromosome[31522:32002].reshape(120, 4)
+    layer1_to_layer2 = newPop.chromosome[2401:16801].reshape(120, 120)
+    layer2_to_layer3 = newPop.chromosome[16841:31241].reshape(120, 120)
+    layer3_to_layer4 = newPop.chromosome[31241:45641].reshape(120, 120)
+    layer3_to_output = newPop.chromosome[45642:46122].reshape(120, 4)
 
-    move = make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_output, 0.1)
+    move = make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_layer4, layer3_to_output, 0.1)
 
     return move
 
@@ -214,7 +213,7 @@ def runGame(player, gen, lastMove, agent, fruit):
         if evaluation[0] > player.hScore:
             player.hScore = evaluation[0]
 
-        if steps == 1000:
+        if steps == 2000:
             return evaluation[0], evaluation[1], deaths
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
@@ -232,7 +231,7 @@ def fitness(population):
     scores = []
 
     for player in population:
-        score = player.hScore * 5000 - player.deaths * 150 - player.avg_steps * 100 - player.penalties * 1000
+        score = player.hScore * 10000 - player.deaths * 150 - player.avg_steps * 100 - player.penalties * 1000
         scores.append(score)
 
     return scores
@@ -270,11 +269,10 @@ def mutation(population):
     prob = random.randint(0, 100)
 
     if prob % 10 == 0:
-        range = random.randint(0, len(population[0].chromosome) / 2), random.randint(len(population[0].chromosome) / 2, len(population[0].chromosome))
-        for i in range(random.randint(0, len(population[0].chromosome))):
-            for j in range(random.randint(0, 25)):
-                population[i].chromosomeSet()[range[0]:range[1]] = random.randint(-1, 1)
-        print("mutated", range)
+        chromeRange = random.randint(0, len(population[0].chromosome) / 2), random.randint(len(population[0].chromosome) / 2, len(population[0].chromosome))
+        for j in range(random.randint(0, 25)):
+            population[j].chromosomeSet()[chromeRange[0]:chromeRange[1]] = random.randint(-1, 1)
+        print("mutated", chromeRange)
         
     return population
 
@@ -306,8 +304,8 @@ def trainGen(population, generation):
         # Selection process of the 24 best agents to make children.
         x = 0
         currentFitness = fitness(population)
-        print(currentFitness)
-        print("Highest fitness: {}".format(max(currentFitness)))
+
+        print(sorted(currentFitness))
         print()
 
         fitnessDict = dict()
