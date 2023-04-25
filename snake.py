@@ -25,11 +25,13 @@ bigfont = pygame.font.SysFont('Corbel',70)
 # Grid size.
 blockSize = 20
 
+
 # Screen width, height and center
 width = screen.get_width()
 height = screen.get_height()
 center = screen.get_rect().center
 
+# Snake class
 class Snake:
 
     def __init__(self, x, y, body):
