@@ -4,10 +4,22 @@ import random
 import numpy as np
 import snake
 import time
-from multiprocessing import Process
+from multiprocessing.pool import ThreadPool
 
-# Need to be aware that i need to be able to run multiple AIagent's with multithreading processing so it doesn't take years to learn.
-# Might not be more efficient but will have to test.
+""" 
+
+To do list:
+    - Need to be aware that i need to be able to run multiple AIagent's with multithreading processing so it doesn't take years to learn.
+      Might not be more efficient but will have to test.
+    - New class for the player to be able to play the game again.
+    - New class to let the player go head to head against a trained agent.
+    - Graphing of training and how the neural network operates.
+
+    - mutation(population): After generation 30 the model could be overfitted and need new genes to generate smarter snakes.
+      Currently it overrides too many chromosomes so need to tinker.
+    - trainGen(population, generation): Need to store the best n agents and return them.
+    
+"""
 
 class Player:
 
@@ -47,10 +59,6 @@ class Player:
     def chromosomeSet(self):
         return self.chromosome
 
-    # Sets the highscore of a player.
-    def setHigh(self, score):
-        self.hScore = score
-
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -87,7 +95,6 @@ def makeMove(newPop, snake, lastMove, fruit):
         posFood[3] = 1
 
     # Current direction aka lastMove variable
-
     wall = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     # wall on left
@@ -175,6 +182,7 @@ def runGame(player, gen, lastMove, agent, fruit):
         elif agent.y < 20 or agent.y > 700:
             agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
 
+        # Runs the neural network to decide which direction to move.
         move = makeMove(player, agent, lastMove, fruit)
 
         if move[0] == max(move):
@@ -213,7 +221,7 @@ def runGame(player, gen, lastMove, agent, fruit):
         if evaluation[0] > player.hScore:
             player.hScore = evaluation[0]
 
-        if steps == 2000:
+        if steps == 500:
             return evaluation[0], evaluation[1], deaths
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
@@ -231,34 +239,33 @@ def fitness(population):
     scores = []
 
     for player in population:
-        score = player.hScore * 10000 - player.deaths * 150 - player.avg_steps * 100 - player.penalties * 1000
-        scores.append(score)
+        
+        # Fitness function.
+        score = player.hScore * 5000 - player.deaths * 150 - player.avg_steps * 100 - player.penalties * 1000
+        scores.append((score, player))
 
     return scores
 
 def crossover(population):
 
-    mother = population[0:int(len(population) / 2 - 1)]
-    father = population[int(len(population) / 2):int(len(population) - 1)]
+    # Split the n best from last generation into mother and father.
+    mother = population[0:5]
+    father = population[6:11]
 
     newGeneration = []
 
-    for i in range(3):
-        newGeneration.append(population[i])
-
-    while len(newGeneration) != 50:
-
+    # population is sorted by highest fitness so we append the first 3 for the next generation (Elitism).
+    while len(newGeneration) < 50:
         child = Player(0, 0, 0, 0, 0)
-
+        parent = random.randint(0, len(mother) - 1)
         for j in range(0, len(population[0].chromosome)):
             
             coin = np.random.uniform(-1, 1, 1)
-            gene = random.randint(0, len(mother) - 1)
 
             if coin < 0:
-                child.insert(mother[gene].chromosomeSet()[j], j)
+                child.insert(mother[parent].chromosome[j], j)
             else:
-                child.insert(father[gene].chromosomeSet()[j], j)
+                child.insert(father[parent].chromosome[j], j)
 
         newGeneration.append(child)
 
@@ -279,15 +286,19 @@ def mutation(population):
 def trainGen(population, generation):
 
     while True:
-    
+        
+        # How many generations it's going to train for.
         if generation == 100:
             break
 
+        # Priting out the current generation.
         print("Generation: {}".format(generation))
         if generation == 100:
             exit()
         
         newGeneration = []
+        
+        # Running the game for every agent in the generation.
         for i in range(49):
             agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
             fruit = snake.Fruit(0,0)
@@ -295,39 +306,26 @@ def trainGen(population, generation):
             # Output is (score, distance, death, avg_steps, penalties)
             score = runGame(population[i], generation, lastMove, agent, fruit)
 
-            if population[i].hScore != 0:
-                population[i].avg_steps = int(population[i].avg_steps / population[i].hScore)
-
             if population[i].hScore < score[0]:
-                population[i].setHigh(score[0])
+                population[i].hScore = score[0]
+
+        currentFitness = fitness(population)
+        currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
+
+        cFitness = []
+        for x in currentFitness:
+            cFitness.append(x[0])
+            
+        print(cFitness)
+        print()
+        print("Current Max: {}".format(currentFitness[0][0]))
+        print()
 
         # Selection process of the 24 best agents to make children.
-        x = 0
-        currentFitness = fitness(population)
-
-        print(sorted(currentFitness))
-        print()
-        print("Current Max: {}".format(max(currentFitness)))
-        print()
-
-        fitnessDict = dict()
-        
-        for player in population:
-            if currentFitness[x] not in fitnessDict.keys():
-                fitnessDict[currentFitness[x]] = player
-            x += 1
-
-        x = 0
-        fitnessDict = sorted(fitnessDict.items(), reverse=True)
-        fitnessDict = dict(fitnessDict)
-
         for i in range(12):
-            
-            newGeneration.append(list(fitnessDict.values())[i])
+            newGeneration.append(currentFitness[i][1])
         
         population = crossover(newGeneration)
-        # if generation > 30:
-        #     population = mutation(population)
 
         generation += 1
 
