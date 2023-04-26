@@ -4,7 +4,6 @@ import random
 import numpy as np
 import snake
 import time
-from multiprocessing.pool import ThreadPool
 
 """ 
 
@@ -54,10 +53,6 @@ class Player:
     # Prints the population for debugging.
     def displayPopulation(self):
         return print("{}".format(self.chromosome))
-
-    # Returns the players chromosome set.
-    def chromosomeSet(self):
-        return self.chromosome
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -254,15 +249,18 @@ def crossover(population):
 
     newGeneration = []
 
+    for i in range(3):
+        newGeneration.append(population[i])
+
     # population is sorted by highest fitness so we append the first 3 for the next generation (Elitism).
     while len(newGeneration) < 50:
         child = Player(0, 0, 0, 0, 0)
         parent = random.randint(0, len(mother) - 1)
-        for j in range(0, len(population[0].chromosome)):
+        for j in range(46122):
             
-            coin = np.random.uniform(-1, 1, 1)
+            coin = random.getrandbits(1)
 
-            if coin < 0:
+            if coin == 0:
                 child.insert(mother[parent].chromosome[j], j)
             else:
                 child.insert(father[parent].chromosome[j], j)
