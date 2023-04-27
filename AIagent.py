@@ -331,7 +331,7 @@ def trainGen(population):
     return bestAgents
 
 # Initilizing variables.
-screen = snake.screen
+# screen = snake.screen
 width = snake.width
 height = snake.height
 lastMove = "left"
