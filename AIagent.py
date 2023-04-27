@@ -2,7 +2,7 @@
 import pygame
 import random
 import numpy as np
-import snake
+import snakeTrain
 import time
 from multiprocessing import Pool
 from functools import partial
@@ -331,7 +331,7 @@ def trainGen(population):
     return bestAgents
 
 # Initilizing variables.
-screen = snake.screen
+# screen = snake.screen
 width = snake.width
 height = snake.height
 lastMove = "left"
