@@ -13,7 +13,11 @@ AIagent(multiprocessing).py
   - Currently uses the multiprocessing library and Pool() which creates worker processes. I've tried 5, 10, 2 worker processes with 5 seeming to be the best.
   - The downside to this is that when we do crossover, the population size to select the best candidates is only 5 snakes instead of the full 50.
 
-My goal now is to try eliminate the visual part of the training process in hopes that it speeds up the process and I can display to the user something in the meantime while it trains instead.
+AIAgent(multiprocessing).py without visuals:
+  - WIthout visuals it improved the time for a single process to 12 seconds and with 10 worker processes it improved it down to 2 seconds.
+  - It can run the 100 generations in 171 seconds with the 10 worker processes.
+  - The problem is as I feared. There isn't enough crossover and that means that we don't improve enough to get good results.
+  - Will retire this file for now and maybe come back to it later and implement multiprocessing where they can talk to each other but I feel this will be a lot more work than it's worth.
 
 Sites that helped:
   - https://davideliu.com/2020/02/03/teaching-ai-to-play-snake-with-genetic-algorithm/
