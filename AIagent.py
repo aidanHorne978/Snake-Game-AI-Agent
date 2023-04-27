@@ -276,9 +276,9 @@ def trainGen(population):
     generation = 0
 
     while True:
-        
+        start = time.time()
         # How many generations it's going to train for.
-        if generation == 2:
+        if generation == 100:
             break
 
         # Priting out the current generation.
@@ -287,7 +287,7 @@ def trainGen(population):
         newGeneration = []
         
         # Running the game for every agent in the generation.
-        for i in range(9):
+        for i in range(49):
             agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
             fruit = snake.Fruit(0,0)
 
@@ -309,14 +309,15 @@ def trainGen(population):
         for i in range(3):
             if bestAgents[i][0] < currentFitness[i][0]:
                 bestAgents[i] = currentFitness[i]
+
         cFitness = []
         for x in currentFitness:
             cFitness.append(x[0])
             
-        # print(cFitness)
-        # print()
-        # print("Current Max: {}".format(currentFitness[0][0]))
-        # print()
+        print(cFitness)
+        print()
+        print("Current Max: {}".format(currentFitness[0][0]))
+        print()
 
         # Selection process of the 24 best agents to make children.
         for i in range(12):
@@ -324,7 +325,9 @@ def trainGen(population):
         
         population = crossover(newGeneration)
         generation += 1
+        end = time.time()
 
+        print("Time for generation: {}".format(end - start))
     return bestAgents
 
 # Initilizing variables.
