@@ -2,7 +2,7 @@
 import pygame
 import random
 import numpy as np
-import snake
+import snakeTrain
 import time
 from multiprocessing import Pool
 from functools import partial
@@ -153,7 +153,7 @@ def makeMove(newPop, snake, lastMove, fruit):
 
     return move
 
-def runGame(player, gen, lastMove, agent, fruit):
+def runGame(player, lastMove, agent, fruit):
 
     steps = 0
     deaths = 0
@@ -164,9 +164,9 @@ def runGame(player, gen, lastMove, agent, fruit):
         
         # If the snake dies it then gets reset
         if agent.x < 20 or agent.x > 860:
-            agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
+            agent = snakeTrain.Snake(width / 2 - 30, height / 2 - 60, [])
         elif agent.y < 20 or agent.y > 700:
-            agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
+            agent = snakeTrain.Snake(width / 2 - 30, height / 2 - 60, [])
 
         # Runs the neural network to decide which direction to move.
         move = makeMove(player, agent, lastMove, fruit)
@@ -184,7 +184,7 @@ def runGame(player, gen, lastMove, agent, fruit):
             lastMove = "down"
 
         # Run's the code for the snake game.
-        evaluation = snake.SnakeGame(agent, lastMove, fruit, gen)
+        evaluation = snakeTrain.SnakeGame(agent, lastMove, fruit)
 
         # If the snake goes 200 steps without eating food.
         if steps % 200 == 0 and steps != 0 and penalty == True:
@@ -277,21 +277,21 @@ def trainGen(population):
     while True:
         
         # How many generations it's going to train for.
-        if generation == 1:
+        if generation == 100:
             break
 
         # Priting out the current generation.
-        print("Generation: {}".format(generation))
+        # print("Generation: {}".format(generation))
         
         newGeneration = []
         
         # Running the game for every agent in the generation.
         for i in range(4):
-            agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
-            fruit = snake.Fruit(0,0)
+            agent = snakeTrain.Snake(width / 2 - 30, height / 2 - 60, [])
+            fruit = snakeTrain.Fruit(0,0)
 
             # Output is (score, distance, death, avg_steps, penalties)
-            score = runGame(population[i], generation, lastMove, agent, fruit)
+            score = runGame(population[i], lastMove, agent, fruit)
 
             if population[i].hScore < score[0]:
                 population[i].hScore = score[0]
@@ -313,7 +313,7 @@ def trainGen(population):
             
         # print(cFitness)
         # print()
-        # print("Current Max: {}".format(currentFitness[0][0]))
+        print("Current Max: {}".format(currentFitness[0][0]))
         # print()
 
         # Selection process of the 24 best agents to make children.
@@ -327,10 +327,10 @@ def trainGen(population):
 
 # Initilizing variables.
 # screen = snake.screen
-width = snake.width
-height = snake.height
+res = snakeTrain.res
+width = res[0]
+height = res[1]
 lastMove = "left"
-res = snake.res
 
 pop1 = []
 pop2 = []

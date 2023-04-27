@@ -2,7 +2,7 @@
 import pygame
 import random
 import numpy as np
-import snake
+import snakeTrain
 import time
 from multiprocessing import Pool
 from functools import partial
