@@ -235,15 +235,15 @@ def fitness(population):
 def crossover(population):
 
     # Split the n best from last generation into mother and father.
-    mother = population[0:5]
-    father = population[6:11]
+    mother = population[0:2]
+    father = population[3:5]
 
     newGeneration = []
 
     newGeneration.append(population[0])
 
     # population is sorted by highest fitness so we append the first 3 for the next generation (Elitism).
-    while len(newGeneration) < 50:
+    while len(newGeneration) < 10:
         child = Player(0, 0, 0, 0, 0)
         parent = random.randint(0, len(mother) - 1)
         for j in range(45243):
@@ -272,7 +272,7 @@ def mutation(population):
 
 def trainGen(population):
 
-    bestAgents = []
+    bestAgent = Player(0, 0, 0, 0, 0)
     generation = 0
 
     while True:
@@ -302,13 +302,12 @@ def trainGen(population):
 
         # To initilize best agents list with best 3 from first run.
         if generation == 0:
-            for i in range(3):
-                bestAgents.append(currentFitness[i])
+            bestAgent = currentFitness[0]
 
         # We will compare the best agents from the last generation and see if we did better this time.
-        for i in range(3):
-            if bestAgents[i][0] < currentFitness[i][0]:
-                bestAgents[i] = currentFitness[i]
+        if bestAgent[0] < currentFitness[0][0]:
+            bestAgent = currentFitness[0]
+
         cFitness = []
         for x in currentFitness:
             cFitness.append(x[0])
@@ -319,13 +318,13 @@ def trainGen(population):
         # print()
 
         # Selection process of the 24 best agents to make children.
-        for i in range(12):
+        for i in range(5):
             newGeneration.append(currentFitness[i][1])
         
         population = crossover(newGeneration)
         generation += 1
 
-    return bestAgents
+    return bestAgent
 
 # Initilizing variables.
 screen = snake.screen
@@ -334,22 +333,29 @@ height = snake.height
 lastMove = "left"
 res = snake.res
 
-# Creating a population of chromosomes for the AIagent.
-population = []
-for i in range(50):
-    population.append(Player(0, 0, 0, 0, 0))
-    population[i].createPopulation()
+pop1 = []
+pop2 = []
+pop3 = []
+pop4 = []
+pop5 = []
 
-# Run the training.
-results = trainGen(population)
+fullPop = [pop1, pop2, pop3, pop4, pop5]
 
+for i in range(10):
+    pop1.append(Player(0, 0, 0, 0, 0))
+    pop2.append(Player(0, 0, 0, 0, 0))
+    pop3.append(Player(0, 0, 0, 0, 0))
+    pop4.append(Player(0, 0, 0, 0, 0))
+    pop5.append(Player(0, 0, 0, 0, 0))
 
+    pop1[i].createPopulation()
+    pop2[i].createPopulation()
+    pop3[i].createPopulation()
+    pop4[i].createPopulation()
+    pop5[i].createPopulation()
 
-
-
-
-
-
-
-
-
+if __name__ == '__main__':
+    start = time.time()
+    with Pool(5) as p:
+        p.map(trainGen, fullPop)
+    end = time.time()

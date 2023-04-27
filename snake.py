@@ -354,3 +354,19 @@ def GameOver():
 # # Once user clicks "start", the main menu will close and the code then runs the game
 # # and will keep running until the user closes the game.
 # SnakeGame()
+
+# def UserControl():
+    # If the user presses a key that is allowed it will remember the key for when the clock ticks and the snake is moved.
+    # if event.type == pygame.KEYDOWN:
+    #     if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+    #         if lastMove != "right":
+    #             lastMove = "left"
+    #     if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+    #         if lastMove != "left":
+    #             lastMove = "right"
+    #     if event.key == pygame.K_UP or event.key == pygame.K_w:
+    #         if lastMove != "down":
+    #             lastMove = "up"
+    #     if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+    #         if lastMove != "up":
+    #             lastMove = "down"
