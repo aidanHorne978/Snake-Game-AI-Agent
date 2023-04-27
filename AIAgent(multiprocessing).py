@@ -211,13 +211,13 @@ def runGame(player, gen, lastMove, agent, fruit):
             return evaluation[0], evaluation[1], deaths
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         pygame.quit()
+        #         exit()
             
         # print("Snake position: {}\t Fruit position: {}".format(player.pos(), fruit.pos()))
-        pygame.display.update()
+        # pygame.display.update()
         steps += 1
 
 def fitness(population):
@@ -326,7 +326,7 @@ def trainGen(population):
     return bestAgent
 
 # Initilizing variables.
-screen = snake.screen
+# screen = snake.screen
 width = snake.width
 height = snake.height
 lastMove = "left"

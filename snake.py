@@ -5,11 +5,11 @@ import numpy as np
 import time
 
 # Initilizing
-pygame.init()
+# pygame.init()
 
 # Screen resolution.
 res = (900, 800)
-screen = pygame.display.set_mode(res)
+# screen = pygame.display.set_mode(res)
 
 # Colours used.
 BLACK = [0, 0, 0]
@@ -20,17 +20,19 @@ color_light = (170,170,170)
 color_dark = (100,100,100) 
 
 # Fonts used.
-smallfont = pygame.font.SysFont('Corbel',35)
-bigfont = pygame.font.SysFont('Corbel',70)
+# smallfont = pygame.font.SysFont('Corbel',35)
+# bigfont = pygame.font.SysFont('Corbel',70)
 
 # Grid size.
 blockSize = 20
 
 
 # Screen width, height and center
-width = screen.get_width()
-height = screen.get_height()
-center = screen.get_rect().center
+width = res[0]
+height = res[1]
+# width = screen.get_width()
+# height = screen.get_height()
+# center = screen.get_rect().center
 
 # Keep track of what direction and when the snake should move.
 clock = pygame.time.Clock()
@@ -161,7 +163,7 @@ def Grow(snake, direction):
 
 def MoveSnake(direction, snake, fruit):
 
-    fruit.drawFruit()
+    # fruit.drawFruit()
 
     # Moves the head of the snake.
     if direction == "left":
@@ -173,7 +175,7 @@ def MoveSnake(direction, snake, fruit):
     elif direction == "down":
         snake.y += blockSize
 
-    pygame.draw.rect(screen, BLACK, snake.draw())
+    # pygame.draw.rect(screen, BLACK, snake.draw())
 
     # Code for the body.
     if len(snake.body) > 1:
@@ -189,11 +191,11 @@ def MoveSnake(direction, snake, fruit):
             else:
                 snake.body[j].y = snake.body[j - 1].y
 
-            pygame.draw.rect(screen, BLACK, snake.body[j])
+            # pygame.draw.rect(screen, BLACK, snake.body[j])
 
             # Draw's the background and grid back.
-            pygame.draw.rect(screen, pygame.Color(GRASS), snake.body[-1])
-            pygame.draw.rect(screen, BLACK, snake.body[-1], 1)
+            # pygame.draw.rect(screen, pygame.Color(GRASS), snake.body[-1])
+            # pygame.draw.rect(screen, BLACK, snake.body[-1], 1)
 
     # Update the head in the body list.
     snake.body[0].x = snake.x
@@ -208,27 +210,24 @@ def SnakeGame(player, lastMove, fruit, generation):
     global background_colour
     global distance
 
-    if generation % 50 == 0 and generation != 0:
-        time.sleep(0.03)
-
     if len(player.body) < 1:
 
         # Creating the screen.
-        background_colour = pygame.Color("#8fcb9e")
-        res = (900, 800)
-        screen = pygame.display.set_mode(res)
-        pygame.display.set_caption('Snake Game')
-        screen.fill(background_colour)
-        pygame.display.flip()
+        # background_colour = pygame.Color("#8fcb9e")
+        # res = (900, 800)
+        # screen = pygame.display.set_mode(res)
+        # pygame.display.set_caption('Snake Game')
+        # screen.fill(background_colour)
+        # pygame.display.flip()
 
         # Drawing the grid.
-        DrawGrid(screen)
+        # DrawGrid(screen)
 
         # Draws the grid for the game and the fruit.
         fruits = fruit
         fruits.generateFruit()
-        pygame.draw.rect(screen, BLACK, player.draw())
-        fruits.drawFruit()
+        # pygame.draw.rect(screen, BLACK, player.draw())
+        # fruits.drawFruit()
         distance = 0
 
         # Head of snake.
@@ -239,17 +238,17 @@ def SnakeGame(player, lastMove, fruit, generation):
 
         # Score variable.
         score = 0
-        scoreTitle = smallfont.render('score:' , True , BLACK)
-        scoreValue = smallfont.render(str(score), True, BLACK)
-        screen.blit(scoreTitle, (center[0] - 75, center[1] + 330))
-        screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+        # scoreTitle = smallfont.render('score:' , True , BLACK)
+        # scoreValue = smallfont.render(str(score), True, BLACK)
+        # screen.blit(scoreTitle, (center[0] - 75, center[1] + 330))
+        # screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
 
     # This moves the snake at a certain time interval.
     # if clock.tick(6):
     MoveSnake(lastMove, player, fruits)
     # time.sleep(0.01)
     distance += 1
-    pygame.display.update()
+    # pygame.display.update()
 
     # When you get a fruit it will replace it with another randomly generated fruit.
     # Then it will add one to the score and display it.
@@ -265,11 +264,11 @@ def SnakeGame(player, lastMove, fruit, generation):
         score += 1
 
         # Erase the old score and put in the new score.
-        scoreValue = smallfont.render(str(score), True, BLACK)
-        screen.fill(background_colour, (center[0] + 15, center[1] + 330, 100, 100))
-        screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+        # scoreValue = smallfont.render(str(score), True, BLACK)
+        # screen.fill(background_colour, (center[0] + 15, center[1] + 330, 100, 100))
+        # screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
     
-        pygame.display.update()
+        # pygame.display.update()
 
     # If the snake hit's itself.
     if len(player.body) > 2:
