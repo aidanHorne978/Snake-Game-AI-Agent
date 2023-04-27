@@ -208,8 +208,8 @@ def SnakeGame(player, lastMove, fruit, generation):
     global background_colour
     global distance
 
-    # if generation % 10 == 0 and generation != 0:
-    #     time.sleep(0.03)
+    if generation % 50 == 0 and generation != 0:
+        time.sleep(0.03)
 
     if len(player.body) < 1:
 
