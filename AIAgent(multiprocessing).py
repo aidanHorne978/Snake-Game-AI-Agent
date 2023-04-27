@@ -235,24 +235,23 @@ def fitness(population):
 def crossover(population):
 
     # Split the n best from last generation into mother and father.
-    mother = population[0:2]
-    father = population[3:5]
+    mother = population[0]
+    father = population[1]
 
     newGeneration = []
 
     newGeneration.append(population[0])
 
     # population is sorted by highest fitness so we append the first 3 for the next generation (Elitism).
-    while len(newGeneration) < 10:
+    while len(newGeneration) < 5:
         child = Player(0, 0, 0, 0, 0)
-        parent = random.randint(0, len(mother) - 1)
         for j in range(45243):
             coin = random.getrandbits(1)
 
             if coin == 0:
-                child.insert(mother[parent].chromosome[j], j)
+                child.insert(mother.chromosome[j], j)
             else:
-                child.insert(father[parent].chromosome[j], j)
+                child.insert(father.chromosome[j], j)
 
         newGeneration.append(child)
 
@@ -278,7 +277,7 @@ def trainGen(population):
     while True:
         
         # How many generations it's going to train for.
-        if generation == 2:
+        if generation == 1:
             break
 
         # Priting out the current generation.
@@ -287,7 +286,7 @@ def trainGen(population):
         newGeneration = []
         
         # Running the game for every agent in the generation.
-        for i in range(9):
+        for i in range(4):
             agent = snake.Snake(width / 2 - 30, height / 2 - 60, [])
             fruit = snake.Fruit(0,0)
 
@@ -318,7 +317,7 @@ def trainGen(population):
         # print()
 
         # Selection process of the 24 best agents to make children.
-        for i in range(5):
+        for i in range(2):
             newGeneration.append(currentFitness[i][1])
         
         population = crossover(newGeneration)
@@ -338,24 +337,42 @@ pop2 = []
 pop3 = []
 pop4 = []
 pop5 = []
+pop6 = []
+pop7 = []
+pop8 = []
+pop9 = []
+pop10 = []
 
-fullPop = [pop1, pop2, pop3, pop4, pop5]
+fullPop = [pop1, pop2, pop3, pop4, pop5, pop6, pop7, pop8, pop9, pop10]
 
-for i in range(10):
+for i in range(5):
     pop1.append(Player(0, 0, 0, 0, 0))
     pop2.append(Player(0, 0, 0, 0, 0))
     pop3.append(Player(0, 0, 0, 0, 0))
     pop4.append(Player(0, 0, 0, 0, 0))
     pop5.append(Player(0, 0, 0, 0, 0))
+    pop6.append(Player(0, 0, 0, 0, 0))
+    pop7.append(Player(0, 0, 0, 0, 0))
+    pop8.append(Player(0, 0, 0, 0, 0))
+    pop9.append(Player(0, 0, 0, 0, 0))
+    pop10.append(Player(0, 0, 0, 0, 0))
 
     pop1[i].createPopulation()
     pop2[i].createPopulation()
     pop3[i].createPopulation()
     pop4[i].createPopulation()
     pop5[i].createPopulation()
+    pop6[i].createPopulation()
+    pop7[i].createPopulation()
+    pop8[i].createPopulation()
+    pop9[i].createPopulation()
+    pop10[i].createPopulation()
+
 
 if __name__ == '__main__':
     start = time.time()
-    with Pool(5) as p:
+    with Pool(10) as p:
         p.map(trainGen, fullPop)
     end = time.time()
+
+    print(end - start)

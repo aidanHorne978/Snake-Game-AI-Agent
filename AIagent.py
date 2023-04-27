@@ -278,7 +278,7 @@ def trainGen(population):
     while True:
         start = time.time()
         # How many generations it's going to train for.
-        if generation == 100:
+        if generation == 1:
             break
 
         # Priting out the current generation.
