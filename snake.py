@@ -9,7 +9,7 @@ pygame.init()
 
 # Screen resolution.
 res = (900, 800)
-screen = pygame.Surface(res)
+screen = pygame.display.set_mode(res)
 
 # Colours used.
 BLACK = [0, 0, 0]
@@ -192,12 +192,9 @@ def MoveSnake(direction, snake, fruit):
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
 
-def SnakeGame(snake, lastMove, agent):
+def SnakeGame():
 
     # Creating the screen.
-    global res 
-    global screen
-    pygame.display.set_mode(res)
     background_colour = pygame.Color("#8fcb9e")
     res = (900, 800)
     screen = pygame.display.set_mode(res)
@@ -208,6 +205,7 @@ def SnakeGame(snake, lastMove, agent):
     # Drawing the grid.
     DrawGrid(screen)
 
+    snake = Snake(width / 2 - 30, height / 2 - 60, [])
     fruit = Fruit(0, 0)
     pygame.draw.rect(screen, BLACK, snake.draw())
     fruit.generateFruit()
@@ -220,6 +218,7 @@ def SnakeGame(snake, lastMove, agent):
     snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
     
     score = 0
+    lastMove = "left"
 
     while True:
 
@@ -231,11 +230,41 @@ def SnakeGame(snake, lastMove, agent):
         screen.blit(scoreTitle, (center[0] - 75, center[1] + 330))
         screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
 
+        # If the user presses a key that is allowed it will remember the key for when the clock ticks and the snake is moved.
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                    if lastMove != "right":
+                        lastMove = "left"
+                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    if lastMove != "left":
+                        lastMove = "right"
+                if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    if lastMove != "down":
+                        lastMove = "up"
+                if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    if lastMove != "up":
+                        lastMove = "down"
+                
         # This moves the snake at a certain time interval.
         if clock.tick(6):
-            move = makeMove(agent, snake, lastMove, fruit)
-            MoveSnake(move, snake, fruit)
+            MoveSnake(lastMove, snake, fruit)
             pygame.display.update()
+
+        # If the snake hit's itself.
+        if len(snake.body) > 2:
+            for parts in snake.body[1:]:
+                if snake.x == parts.x and snake.y == parts.y:
+                    GameOver()
+
+        if snake.x < 20 or snake.x > 860:
+            GameOver()
+
+        if snake.y < 20 or snake.y > 700:
+            GameOver()
 
         # When you get a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
@@ -256,21 +285,6 @@ def SnakeGame(snake, lastMove, agent):
             screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
         
         pygame.display.update()
-
-        # If the snake hit's itself.
-        if len(snake.body) > 2:
-            for parts in snake.body[1:]:
-                if snake.x == parts.x and snake.y == parts.y:
-                    return
-                    # GameOver()
-
-        if snake.x < 20 or snake.x > 860:
-            return
-            # GameOver()
-
-        elif snake.y < 20 or snake.y > 700:
-            return
-            # GameOver()
 
 def GameOver():
 
@@ -294,9 +308,7 @@ def GameOver():
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
-                pygame.quit()
-                exit()
-                # SnakeGame()
+                SnakeGame()
 
         # To find where the mouse is at all times.
         mouse = pygame.mouse.get_pos()
@@ -332,136 +344,10 @@ def GameOver():
         pygame.display.update() 
 
 
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-def make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_layer4, layer3_to_output, bias):
-
-    layer1 = np.dot(input_vector, input_to_layer1)
-    layer2 = sigmoid(np.dot(layer1, layer1_to_layer2) + bias)
-    layer3 = sigmoid(np.dot(layer2, layer2_to_layer3) + bias)
-    layer4 = sigmoid(np.dot(layer3, layer3_to_layer4) + bias)
-    output_layer = np.dot(layer4, layer3_to_output) + bias
-    return output_layer
-
-def makeMove(agent, snake, lastMove, fruit):
-
-    nextMove = ""
-
-    # Input nodes.
-
-    # Relative position of food to the head of the snake.
-    posFood = [0, 0, 0, 0]
-    # If food is up and left
-    if snake.x > fruit.x and snake.y < fruit.y:
-        posFood[0] = 1
-        posFood[2] = 1
-    # if food is down and left
-    elif snake.x > fruit.x and snake.y > fruit.y:
-        posFood[0] = 1
-        posFood[3] = 1
-    # if food is up and right
-    elif snake.x < fruit.x and snake.y < fruit.y:
-        posFood[1] = 1
-        posFood[2] = 1
-    # if food is down and right
-    elif snake.x < fruit.y and snake.y > fruit.y:
-        posFood[1] = 1
-        posFood[3] = 1
-
-    # Current direction aka lastMove variable
-    wall = [0, 0, 0, 0]
-
-    # wall on left
-    if snake.x - 20 == 20:
-        wall[0] = 1
-    # wall on right
-    elif snake.x + 20 == 860:
-        wall[1] = 1
-    # wall down
-    elif snake.y - 20 == 20:
-        wall[2] = 1
-    # wall up
-    elif snake.y + 20 == 700:
-        wall[3] = 1
-    
-    # relative pos of food:
-    relativePosx = (fruit.x - snake.x) / res[0]
-    relativePosy = (fruit.y - snake.y) / res[1]
-
-    currdirection = [0, 0, 0, 0]
-    if lastMove == "left":
-        currdirection[0] = 1
-    elif lastMove == "right":
-        currdirection[1] = 1
-    elif lastMove == "up":
-        currdirection[2] = 1
-    else:
-        currdirection[3] = 1
-
-    input_vector = np.array(wall[0])
-
-    for i in range(1, 3):
-        input_vector = np.append(input_vector, wall[i])
-
-    for i in range(4):
-        input_vector = np.append(input_vector, currdirection[i])
-        input_vector = np.append(input_vector, posFood[i])
-
-    input_vector = np.append(input_vector, relativePosx)
-    input_vector = np.append(input_vector, relativePosy)
-
-    # Chromosomes split.
-    input_to_layer1 = agent.chromosome[0:1560].reshape(13, 120)
-    input_to_layer1[:, 0] = input_vector
-    layer1_to_layer2 = agent.chromosome[1561:15961].reshape(120, 120)
-    layer2_to_layer3 = agent.chromosome[15962:30362].reshape(120, 120)
-    layer3_to_layer4 = agent.chromosome[30362:44762].reshape(120, 120)
-    layer3_to_output = agent.chromosome[44763:45243].reshape(120, 4)
-
-    move = make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_layer3, layer3_to_layer4, layer3_to_output, 0.1)
-
-    while True:
-        if move[0] == max(move):
-            if lastMove != "right":
-                lastMove = "left"
-                return lastMove
-            move[0] = -100
-        if move[1] == max(move):
-            if lastMove != "left":
-                lastMove = "right"
-                return lastMove
-            move[1] = -100
-        if move[2] == max(move):
-            if lastMove != "down":
-                lastMove = "up"
-                return lastMove
-            move[2] = -100
-        if move[3] == max(move):
-            if lastMove != "up":
-                lastMove = "down"
-                return lastMove
-            move[3] = -100
 
 # # Runs the main menu.
-# MainMenu()
+MainMenu()
 
 # # Once user clicks "start", the main menu will close and the code then runs the game
 # # and will keep running until the user closes the game.
-# SnakeGame()
-
-# def UserControl():
-    # If the user presses a key that is allowed it will remember the key for when the clock ticks and the snake is moved.
-    # if event.type == pygame.KEYDOWN:
-    #     if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-    #         if lastMove != "right":
-    #             lastMove = "left"
-    #     if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-    #         if lastMove != "left":
-    #             lastMove = "right"
-    #     if event.key == pygame.K_UP or event.key == pygame.K_w:
-    #         if lastMove != "down":
-    #             lastMove = "up"
-    #     if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-    #         if lastMove != "up":
-    #             lastMove = "down"
+SnakeGame()
