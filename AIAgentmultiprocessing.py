@@ -5,6 +5,7 @@ import time
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
+from multiprocessing import Pool
 
 class Agent:
 
@@ -289,6 +290,64 @@ def makeMove(agent, snake, lastMove, fruit, debug):
     move = move.tolist()
     return move
 
+def fitness(population):
+
+    scores = []
+    # Review how the agent performed in that generation and return it's score.
+    for agent in population:
+        if agent.hScore > 0:
+            score = agent.hScore * 5000  - agent.deaths * 150 - int(sum(agent.avg_steps) / len(agent.avg_steps) * 100) - agent.penalties * 1000
+        else:
+            score = agent.hScore * 5000  - agent.deaths * 150 - agent.penalties * 1000
+        scores.append((score, agent))
+    return scores
+
+def crossover(population, size):
+
+    # Split the 12 best from last generation into 2 lists so we don't crossover from the same parent.
+    mother = population[0:5]
+    father = population[6:11]
+    newGeneration = []
+
+    # Will crossover from the best 12 agents in the previous generation to create the next generation.
+    while len(newGeneration) < size:
+        child = Agent(0, 0, 0, [])
+        for j in range(amountOfChromosomes):
+
+            coin = random.getrandbits(1)
+            parent = random.randint(0, len(mother) - 1)
+
+            if coin == 0:
+                child.insert(mother[parent].chromosome[j], j)
+            else:
+                child.insert(father[parent].chromosome[j], j)
+
+        newGeneration.append(child)
+
+    return newGeneration
+
+def mutation(population, generation, fitness):
+
+    # If the generation isn't past 100,000 fitness by generation 45. Then it's an unlucky population and we should start again.
+    if generation > 50 and fitness < 100000:
+        for agent in population:
+            agent.createPopulation()
+
+        print()
+        print("Bad generation, Restarting")
+        print()
+
+    prob = random.randint(0, 100)
+
+    # Mutate the next generation at random to promote diversity and try avoid the local minima.
+    if prob % 48 == 0:
+        for j in range(random.randint(0, 24), random.randint(25, 50)):
+            for i in range(len(population[j].chromosome)):
+                population[j].chromosome[i] = population[j].chromosome[i] + random.uniform(-1, 1)
+        print("mutated")
+    
+    return population
+
 def runAgent(agent):
 
     # Initlizing variables needed for each individual agent.
@@ -369,123 +428,83 @@ def runAgent(agent):
 
         # Return the agent after training.
         if steps == 2500:
-            return
+            return agent
             
         steps += 1
-
-def fitness(population):
-
-    scores = []
-    # Review how the agent performed in that generation and return it's score.
-    for agent in population:
-        if agent.hScore > 0:
-            score = agent.hScore * 5000  - agent.deaths * 150 - int(sum(agent.avg_steps) / len(agent.avg_steps) * 100) - agent.penalties * 1000
-        else:
-            score = agent.hScore * 5000  - agent.deaths * 150 - agent.penalties * 1000
-        scores.append((score, agent))
-    return scores
-
-def crossover(population):
-
-    # Split the 12 best from last generation into 2 lists so we don't crossover from the same parent.
-    mother = population[0:5]
-    father = population[6:11]
-    newGeneration = []
-
-    # Will crossover from the best 12 agents in the previous generation to create the next generation.
-    while len(newGeneration) < 50:
-        child = Agent(0, 0, 0, [])
-        for j in range(amountOfChromosomes):
-
-            coin = random.getrandbits(1)
-            parent = random.randint(0, len(mother) - 1)
-
-            if coin == 0:
-                child.insert(mother[parent].chromosome[j], j)
-            else:
-                child.insert(father[parent].chromosome[j], j)
-
-        newGeneration.append(child)
-
-    return newGeneration
-
-def mutation(population):
-
-    prob = random.randint(0, 100)
-
-    # Mutate the next generation at random to promote diversity and try avoid the local minima.
-    if prob % 48 == 0:
-        for j in range(random.randint(0, 24), random.randint(25, 50)):
-            for i in range(len(population[j].chromosome)):
-                population[j].chromosome[i] = population[j].chromosome[i] + random.uniform(-1, 1)
-        print("mutated")
-    
-    return population
 
 def trainGen(population, numGens):
 
     generation = 0
+    group = 5
 
     # Train the n number of agents for x number of generations.
     while True:
 
         # Record how long each generation takes for debugging and efficiency purposes.
         start = time.time()
-
+        if generation % 33 == 0:
+            group -= 1
+        size = group * 10
         # Priting out the current generation.
         print()
-        print("Generation: {}".format(generation))
+        print(f"Generation: {generation}")
+        print(f"Population Size: {len(population)}")
+        print()
         
         newGeneration = []
         
-        # Running the game for every agent in the generation.
-        for i in range(50):
+        # Running the game for every agent in the generation. Run's the agents in groups of 5 with 10 processes.
+        sublists = [population[i:i+group] for i in range(0, len(population), group)]
+        newPop = []
+        with Pool(10) as pool:
+            for sublist in sublists:
+                result = pool.map_async(runAgent, sublist)
+                for result in result.get():
+                    newPop.append(result)
+        population = newPop
 
-            # Multiprocess this.
-            runAgent(population[i])
-        
         # Finding the fitness for the generation and sorting by score to find best agents.
         currentFitness = fitness(population)
         currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
 
-        # This is just for displaying the current generation in one list.
+        # # This is just for displaying the current generation in one list.
         cFitness = []
         for x in currentFitness:
             cFitness.append(x[0])
 
-        # Printing the generation's score and current maximum fitness score.
+        # # Printing the generation's score and current maximum fitness score.
         print()
         print(cFitness)
         print()
         print("Current Max: {}".format(currentFitness[0][0]))
         print()
 
-        # --------------------------------- DEBUGGING ---------------------------------
+        # # --------------------------------- DEBUGGING ---------------------------------
 
-        # if generation > 90:
-        #     for i in range(3):
-        #         print("Score: {}".format(currentFitness[i][1].hScore))
-        #         print("Deaths: {}".format(currentFitness[i][1].deaths))
-        #         print("Penaltys: {}".format(currentFitness[i][1].penalties))
-        #         print("Average steps: {}".format(currentFitness[i][1].avg_steps))
-        #         print()
-        #         displayGame(Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), []), "left", population[i], Fruit(0, 0))
-        #     pygame.quit()
-        #     input("Are you ready for the next run? ")
+        # # if generation > 90:
+        # #     for i in range(3):
+        # #         print("Score: {}".format(currentFitness[i][1].hScore))
+        # #         print("Deaths: {}".format(currentFitness[i][1].deaths))
+        # #         print("Penaltys: {}".format(currentFitness[i][1].penalties))
+        # #         print("Average steps: {}".format(currentFitness[i][1].avg_steps))
+        # #         print()
+        # #         displayGame(Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), []), "left", population[i], Fruit(0, 0))
+        # #     pygame.quit()
+        # #     input("Are you ready for the next run? ")
 
-        # --------------------------------- DEBUGGING ---------------------------------
+        # # --------------------------------- DEBUGGING ---------------------------------
 
-        # Adding the best 12 agents to the next generation for crossover and mutation.
+        # # Adding the best 12 agents to the next generation for crossover and mutation.
         for i in range(12):
             newGeneration.append(currentFitness[i][1])
-        
-        population = crossover(newGeneration)
-        population = mutation(population)
+
+        population = crossover(newGeneration, size)
+        population = mutation(population, generation, currentFitness[0][0])
 
         generation += 1
         end = time.time()
         
-        # How many generations it's going to train for.
+        # # How many generations it's going to train for.
         if generation == numGens:
             return currentFitness
 
@@ -632,36 +651,45 @@ def displayGame(snake, lastMove, agent, fruit):
         elif snake.y < 20 or snake.y > 700:
             return
 
-# Initilizing variables.
-res = (900, 800)
-width = res[0]
-height = res[1]
-center = (int(width / 2), int(height / 2))
-lastMove = "left"
 blockSize = 20
+res = (900, 800)
 
-BLACK = [0, 0, 0]
-RED = [255, 0, 0]
-GRASS = ("#7EC984")
-color = (255,255,255) 
-color_light = (170,170,170) 
-color_dark = (100,100,100)
+if __name__ == "__main__":    
+    start = time.time()
+    # Initilizing variables.
+    res = (900, 800)
+    width = res[0]
+    height = res[1]
+    center = (int(width / 2), int(height / 2))
+    lastMove = "left"
+    blockSize = 20
 
-amountOfChromosomes = 16321 
+    BLACK = [0, 0, 0]
+    RED = [255, 0, 0]
+    GRASS = ("#7EC984")
+    color = (255,255,255) 
+    color_light = (170,170,170) 
+    color_dark = (100,100,100)
 
-# Creating a population of agents.
-population = []
-for i in range(50):
-    population.append(Agent(0, 0, 0, []))
-    population[i].createPopulation()
+    amountOfChromosomes = 16321 
 
-# Run the training.
-results = trainGen(population, 100)
+    # Creating a population of agents.
+    population = []
+    for i in range(50):
+        population.append(Agent(0, 0, 0, []))
+        population[i].createPopulation()
+    # Run the training.
+    results = trainGen(population, 100)
+    end = time.time()
+    print()
+    print("Total train time: {}".format(end - start))
+    
+    # This is for when the training is completed it will wait for user input to display results.
+    x = input("are you ready to see the results?")
 
-# This is for when the training is completed it will wait for user input to display results.
-x = input("are you ready to see the results?")
+    # Display the 20 best agents.
+    for i in range(20):
+        print("Fitness: {}".format(results[i][0]))
+        displayGame(Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), []), "left", results[i][1], Fruit(0, 0))
 
-# Display the 20 best agents.
-for i in range(20):
-    print("Fitness: {}".format(results[i][0]))
-    displayGame(Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), []), "left", results[i][1], Fruit(0, 0))
+
