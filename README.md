@@ -31,5 +31,5 @@ Have recreated the game with the user controlls working and is in repository Sna
  - Will retire this file for now and maybe come back to it later and implement multiprocessing where they can talk to each other but I feel this will be a lot more work than it's worth.
 
 Sites that helped:
-  - https://davideliu.com/2020/02/03/teaching-ai-to-play-snake-with-genetic-algorithm/
-  - https://www.sitepoint.com/python-multiprocessing-parallel-programming/
+ - https://davideliu.com/2020/02/03/teaching-ai-to-play-snake-with-genetic-algorithm/
+ - https://www.sitepoint.com/python-multiprocessing-parallel-programming/
