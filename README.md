@@ -4,13 +4,19 @@
 
     Have recreated the game with the user controlls working and is in repository Snake-Game (https://github.com/aidanHorne978/Snake-Game).
 
-    AIagent.py:
+ **AIagent.py:**
       - A genetic algorithm that uses components from snake.py to train 50 agents over 100 generations. 
       - I've improved efficiency by stripping away the visual components for training and it now trains in 15 minutes for 1000 steps and 50 agents.
       - Currently, the agent has a 12 neuron input layer, 1 hidden layers of 120 neurons, and a 4 output neuron layer that contains the probability for each direction.
       - The inputs are the position of the food (4 inputs). Current direction the snake is going (4 inputs). If there is a wall in any direction (4 inputs).
       - Will be working on having an input that has information on the body of the snake so it knows when it's long and turning around to avoid itself.
-
+      
+**AIAgentmultiprocessing.py**
+      - Run's the same AI agent as AIagent.py but uses multiprocessing to speed up the generations.
+      - Currently, I'm using a desktop with a AMD Ryzen 7 3700X 8-Core Processor 3.60 GHz CPU and I am running 50 Agents in a generation that each do 2,500 steps before returning. I've divided the population into 10 groups  of 5 which takes between 5 - 6 seconds to train a generation.
+      - Comparing the 5 - 6 seconds per generation to the 14 - 15 seconds it takes just using one process in AIagent.py, it is much more efficient and takes way less time (10 minutes instead of 25 minutes).
+      - In my previous version, I was dividing the population then training. In this version, I've kept the population together but divide them off to run the game and then bring them all back together when assessing fitness and doing the crossover / mutation functions.
+      
 April 27th 2023:
 
     AIagent(multiprocessing).py
