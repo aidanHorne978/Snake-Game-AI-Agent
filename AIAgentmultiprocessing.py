@@ -326,22 +326,13 @@ def crossover(population, size):
 
     return newGeneration
 
-def mutation(population, generation, fitness, group):
-
-    # If the generation isn't past 100,000 fitness by generation 45. Then it's an unlucky population and we should start again.
-    if generation > 50 and fitness < 100000:
-        for agent in population:
-            agent.createPopulation()
-
-        print()
-        print("Bad generation, Restarting")
-        print()
+def mutation(population):
 
     prob = random.randint(0, 100)
 
     # Mutate the next generation at random to promote diversity and try avoid the local minima.
     if prob % 48 == 0:
-        for j in range(random.randint(0, int(group / 2)), random.randint(int(group / 2) + 1, len(group) - 1)):
+        for j in range(random.randint(0,24), random.randint(25, 50)):
             for i in range(len(population[j].chromosome)):
                 population[j].chromosome[i] = population[j].chromosome[i] + random.uniform(-1, 1)
         print("mutated")
@@ -436,20 +427,30 @@ def trainGen(population, numGens):
 
     generation = 0
     group = 5
+    size = group * 10
+    restart = False
 
     # Train the n number of agents for x number of generations.
     while True:
 
         # Record how long each generation takes for debugging and efficiency purposes.
         start = time.time()
-        if generation % 33 == 0:
-            group -= 1
-        size = group * 10
+
         # Priting out the current generation.
         print()
         print(f"Generation: {generation}")
         print()
         
+        # If the generation isn't past 100,000 fitness by generation 45. Then it's an unlucky population and we should start again.
+        if generation == 74 and currentFitness[0][0] < 100000:
+            for agent in population:
+                agent.createPopulation()
+            restart = True
+
+            print()
+            print("Bad population, Restarting")
+            print()
+
         newGeneration = []
         
         # Running the game for every agent in the generation. Run's the agents in groups of 5 with 10 processes.
@@ -476,7 +477,6 @@ def trainGen(population, numGens):
         print(cFitness)
         print()
         print("Current Max: {}".format(currentFitness[0][0]))
-        print()
 
         # # --------------------------------- DEBUGGING ---------------------------------
 
@@ -498,11 +498,15 @@ def trainGen(population, numGens):
             newGeneration.append(currentFitness[i][1])
 
         population = crossover(newGeneration, size)
-        population = mutation(population, generation, currentFitness[0][0], group)
+        population = mutation(population)
 
         generation += 1
         end = time.time()
         
+        if restart:
+            numGens += 75
+            group = 5
+
         # # How many generations it's going to train for.
         if generation == numGens:
             return currentFitness
@@ -678,10 +682,11 @@ if __name__ == "__main__":
         population.append(Agent(0, 0, 0, []))
         population[i].createPopulation()
     # Run the training.
-    results = trainGen(population, 100)
+    results = trainGen(population, 75)
     end = time.time()
     print()
-    print("Total train time: {}".format(end - start))
+    print("Elapsed time: " + time.strftime("%H:%M:%S.{}".format(str(end - start % 1)[2:])[:15], time.gmtime(end - start)))
+    # print("Total train time: {}".format(end - start))
     
     # This is for when the training is completed it will wait for user input to display results.
     x = input("are you ready to see the results?")
