@@ -326,7 +326,7 @@ def crossover(population, size):
 
     return newGeneration
 
-def mutation(population, generation, fitness):
+def mutation(population, generation, fitness, group):
 
     # If the generation isn't past 100,000 fitness by generation 45. Then it's an unlucky population and we should start again.
     if generation > 50 and fitness < 100000:
@@ -341,7 +341,7 @@ def mutation(population, generation, fitness):
 
     # Mutate the next generation at random to promote diversity and try avoid the local minima.
     if prob % 48 == 0:
-        for j in range(random.randint(0, 24), random.randint(25, 50)):
+        for j in range(random.randint(0, int(group / 2)), random.randint(int(group / 2) + 1, len(group) - 1)):
             for i in range(len(population[j].chromosome)):
                 population[j].chromosome[i] = population[j].chromosome[i] + random.uniform(-1, 1)
         print("mutated")
@@ -448,7 +448,6 @@ def trainGen(population, numGens):
         # Priting out the current generation.
         print()
         print(f"Generation: {generation}")
-        print(f"Population Size: {len(population)}")
         print()
         
         newGeneration = []
@@ -499,7 +498,7 @@ def trainGen(population, numGens):
             newGeneration.append(currentFitness[i][1])
 
         population = crossover(newGeneration, size)
-        population = mutation(population, generation, currentFitness[0][0])
+        population = mutation(population, generation, currentFitness[0][0], group)
 
         generation += 1
         end = time.time()
