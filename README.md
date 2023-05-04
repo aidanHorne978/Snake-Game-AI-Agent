@@ -1,8 +1,8 @@
 # Snake-Game-AI-Agent
 
-4th May 2023:
+# 4th May 2023:
 
-    Have recreated the game with the user controlls working and is in repository Snake-Game (https://github.com/aidanHorne978/Snake-Game).
+Have recreated the game with the user controlls working and is in repository Snake-Game (https://github.com/aidanHorne978/Snake-Game).
 
 ## AIagent.py:
  - A genetic algorithm that uses components from snake.py to train 50 agents over 100 generations. 
