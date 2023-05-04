@@ -4,16 +4,14 @@ import numpy as np
 import time
 import pygame
 
-# Need to fix the bug where it can go up and down constantly or left and right.
-
-class Player:
+class Agent:
 
     def __init__(self, hScore, deaths, penalties, avg_steps, distance):
         
-        # Initilizing with the size of the chromosomes.
+        # Initilizing with the size of the player's chromosomes.
         self.chromosome = np.zeros(amountOfChromosomes)
 
-        # Player's high score in training.
+        # Player's highest score in training.
         self.hScore = hScore
 
         # Amount of deaths in training.
@@ -25,9 +23,6 @@ class Player:
         # Average steps during training.
         self.avg_steps = avg_steps
 
-        # Distance travelled during training.
-        self.distance = distance
-
     # Insert a chromosome at a certain index.
     def insert(self, value, index):
         self.chromosome[index] = value
@@ -35,31 +30,27 @@ class Player:
     # Initilizes the chromosomes for a player.
     def createPopulation(self):
         self.chromosome = np.random.uniform(-1, 1, amountOfChromosomes)
-    
-    # Prints the population for debugging.
-    def displayPopulation(self):
-        return print("{}".format(self.chromosome))
 
 class Snake:
 
+    # Initilizes the snake with it's heads x, y value and body which is a list.
     def __init__(self, x, y, body):
         self.x = x
         self.y = y
         self.body = body
 
-    def pos(self):
-        return self.x, self.y
-
+    # Draws the snake's body.
     def draw(self):
         return pygame.Rect(self.x, self.y, blockSize, blockSize)
 
 class Fruit:
 
+    # Initilizes the fruit object and which has an x and y coordinate.
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
-    # Range is so it fits in the grid of the game.
+    # Generates a fruit with a range so it fits inside grid of the game.
     def generateFruit(self):
         newx = random.randrange(blockSize, res[0] - blockSize, blockSize)
         newy = random.randrange(blockSize, res[1] - blockSize - 100, blockSize)
@@ -74,6 +65,7 @@ class Fruit:
 
 def Grow(snake, direction):
 
+    # Will create the new segment on the tile the snake's head just left.
     if direction == "left":
         segment = pygame.Rect(snake.body[-1].x + blockSize, snake.body[-1].y, blockSize, blockSize)
         snake.body.insert(len(snake.body), segment)
@@ -99,11 +91,13 @@ def MoveSnake(direction, snake, draw):
     elif direction == "down":
         snake.y += blockSize
 
+    # If we are displaying to the user we draw it to the screen.
     if draw:
         pygame.draw.rect(screen, BLACK, snake.draw())
 
-    # Code for the body.
+    # This moves the body in the way a snake does, by following the segment before it.
     if len(snake.body) > 1:
+
         for j in reversed(range(1, len(snake.body))):
 
             if snake.body[j - 1] == snake.x:
@@ -116,6 +110,7 @@ def MoveSnake(direction, snake, draw):
             else:
                 snake.body[j].y = snake.body[j - 1].y
 
+            # If we are displaying to the user we draw it to the screen.
             if draw:
                 pygame.draw.rect(screen, BLACK, snake.body[j])
                 pygame.draw.rect(screen, pygame.Color(GRASS), snake.body[-1])
@@ -125,62 +120,65 @@ def MoveSnake(direction, snake, draw):
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
 
-    end = time.time()
-
-def SnakeGame(player, lastMove, fruit):
+def SnakeGame(agent, lastMove, fruit):
 
     scored = False
 
-    if len(player.body) < 1:
+    # If this is the first run through for the current agent we initilize some variables.
+    if len(agent.body) < 1:
 
-        global distance
         global score
-
-        # Draws the grid for the game and the fruit.
-        distance = 0
         score = 0
 
         # Head of snake.
-        player.body.append(pygame.Rect(player.x, player.y, blockSize, blockSize))
+        agent.body.append(pygame.Rect(agent.x, agent.y, blockSize, blockSize))
 
         # Tail of snake.
-        player.body.append(pygame.Rect(player.x, player.y, blockSize, blockSize))
+        agent.body.append(pygame.Rect(agent.x, agent.y, blockSize, blockSize))
 
         # Score variable.
         score = 0
 
-    MoveSnake(lastMove, player, False)
-    distance += 1
+    # Move the snake in a direction picked by the neural network.
+    MoveSnake(lastMove, agent, False)
 
     # When you get a fruit it will replace it with another randomly generated fruit.
     # Then it will add one to the score and display it.
-    if player.x == fruit.x and player.y == fruit.y:
+    if agent.x == fruit.x and agent.y == fruit.y:
+
         # Adds a part to the body.
-        Grow(player, lastMove)
+        Grow(agent, lastMove)
 
         # Increase score by one.
         score += 1
         scored = True
 
     # If the snake hit's itself.
-    if len(player.body) > 2:
-        for parts in player.body[1:]:
-            if player.x == parts.x and player.y == parts.y:
-                return score, distance, scored, False
+    if len(agent.body) > 2:
+        for parts in agent.body[1:]:
+            if agent.x == parts.x and agent.y == parts.y:
+                return score, scored, False
 
-    if player.x < 20 or player.x > 860:
-        return score, distance, scored, False
+    # If the snake hit's the horizontal barrier we return with False which indicates a death.
+    if agent.x < 20 or agent.x > 860:
+        return score, scored, False
 
-    elif player.y < 20 or player.y > 700:
-        return score, distance, scored, False
+    # If the snake hit's the vertical barrier we return with False which indicates a death.
+    if agent.y < 20 or agent.y > 700:
+        return score, scored, False
     else:
-        return score, distance, scored, True
+
+        # If the snake didn't die then we return the score, whether they scored or not and True indicating it's still alive.
+        return score, scored, True
 
 def sigmoid(x):
+    
+    # Activation function.
     return 1 / (1 + np.exp(-x))
 
 def make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_output, bias):
 
+    # Neural network for the agent to make decisions.
     layer1 = np.dot(input_vector, input_to_layer1)
     layer2 = sigmoid(np.dot(layer1, layer1_to_layer2) + bias)
     output_layer = np.dot(layer2, layer2_to_output) + bias
@@ -188,12 +186,18 @@ def make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_o
 
 def makeMove(agent, snake, lastMove, fruit, debug):
 
-    # Input nodes.
+    # --------------------------------- DEBUGGING ---------------------------------
 
-    # Relative position of food to the head of the snake.
-    posFood = [0, 0, 0, 0]
     # print("Snake x: {}\tSnake y: {}\tFruit x: {}\tFruit y: {}".format(snake.x, snake.y, fruit.x, fruit.y))
 
+    # --------------------------------- DEBUGGING ---------------------------------
+
+    ## Input nodes ##
+
+    # Orientation is Left, Right, Up, Down in the lists.
+
+    # Read's a 1 if the food is in that direction, else 0. Will have 2 1's unless the snake is on the correct horizontal or vertical axis.
+    posFood = [0, 0, 0, 0]
     if snake.x != fruit.x:
         if snake.x > fruit.x:
             posFood[0] = 1
@@ -205,28 +209,19 @@ def makeMove(agent, snake, lastMove, fruit, debug):
         elif snake.y < fruit.y:
             posFood[3] = 1
 
-    # telling it where the tail is.
-    # tail = [0, 0]
-    # if len(snake.body) > 2:
-    #     tail[0] = snake.body[-1].x / res[0]
-    #     tail[1] = snake.body[-1].y / res[1]
-
-    # Current direction aka lastMove variable
+    # Read's 1 if there is a wall in that direction, else 0.
     wall = [0, 0, 0, 0]
-    
-    # wall on left
     if snake.x == 20:
         wall[0] = 1
-    # wall on right
     if snake.x == 860:
         wall[1] = 1
-    # wall down
     if snake.y == 20:
         wall[2] = 1
-    # wall up
     if snake.y == 700:
         wall[3] = 1
 
+    # Gives the relative position of the food like posFood. Index 0 will have -1 if food is left, else 0. Index 1 will have -1 if food is right, else 0.
+    # Index 2 will have -1 if food is up, else 0, Index 3 will have -1 if food is down, else 0.
     relativePos = [0, 0, 0, 0]
     if fruit.x < snake.x:
         relativePos[0] = -1
@@ -238,6 +233,7 @@ def makeMove(agent, snake, lastMove, fruit, debug):
     elif fruit.y > snake.y:
         relativePos[3] = 1
 
+    # Current direction the snake is moving aka lastMove variable.
     currdirection = [0, 0, 0, 0]
     if lastMove == "left":
         currdirection[0] = 1
@@ -248,6 +244,7 @@ def makeMove(agent, snake, lastMove, fruit, debug):
     if lastMove == "down":
         currdirection[3] = 1
 
+    # Putting the input nodes into an array.
     input_vector = np.array(posFood[0])
 
     for i in range(4):
@@ -256,16 +253,15 @@ def makeMove(agent, snake, lastMove, fruit, debug):
         input_vector = np.append(input_vector, wall[i])
         input_vector = np.append(input_vector, currdirection[i])
         # input_vector = np.append(input_vector, relativePos[i])
-    
-    # input_vector = np.append(input_vector, tail[0])
-    # input_vector = np.append(input_vector, tail[1])
 
-    # 12 input nodes
+
+    # Neural network's structure is an input layer (12 -> 120) values, hidden layer (120 -> 120) values and an output layer (120 -> 4) values.
     input_to_layer1 = agent.chromosome[0:1440].reshape(12, 120)
     input_to_layer1[:, 0] = input_vector
     layer1_to_layer2 = agent.chromosome[1441:15841].reshape(120, 120)
     layer2_to_output = agent.chromosome[15841:16321].reshape(120, 4)
 
+    # --------------------------------- DEBUGGING ---------------------------------
     # 14 input nodes.
     # input_to_layer1 = agent.chromosome[0:1680].reshape(14, 120)
     # input_to_layer1[:, 0] = input_vector
@@ -279,31 +275,38 @@ def makeMove(agent, snake, lastMove, fruit, debug):
     # layer1_to_layer2 = agent.chromosome[1921:16321].reshape(120, 120)
     # layer2_to_output = agent.chromosome[16321:16801].reshape(120, 4)
 
-    move = make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_output, 0)
-
-    move = move.tolist()
-
     if debug:
         return move, [wall, currdirection, posFood]
 
+    # --------------------------------- DEBUGGING ---------------------------------
+
+    # Return's a numpy array of 4 numbers with the highest being the best move.
+    move = make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_output, 0)
+
+    # Convert to list.
+    move = move.tolist()
     return move
 
-def runAgent(player):
+def runAgent(agent):
 
+    # Initlizing variables needed for each individual agent.
     steps = 0
+    lastMove = "left"
     avg_steps = []
     penalty = True
-    fruit = Fruit(0, 0)
-    fruit.generateFruit()
-    lastMove = "left"
-    aiSnake = Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), [])
 
+    fruit = Fruit(0, 0)
+    aiSnake = Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), [])
+    fruit.generateFruit()
+
+    # Creates a new snake in a random position with a new fruit aswell to promote dynamic behaviour.
     def respawn():
         newSnake = Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), [])
         fruit = Fruit(0, 0)
         fruit.generateFruit()
         return newSnake
 
+    # Train the agent for n number of steps.
     while True:
         
         # If the snake dies it then gets reset
@@ -315,8 +318,9 @@ def runAgent(player):
             penalty = True
 
         # Runs the neural network to decide which direction to move.
-        move = makeMove(player, aiSnake, lastMove, fruit, False)
+        move = makeMove(agent, aiSnake, lastMove, fruit, False)
 
+        # The highest value is the move the neural network thinks is the best.
         if move[0] == max(move):
             if lastMove != "right":
                 lastMove = "left"
@@ -333,31 +337,32 @@ def runAgent(player):
         # Run's the code for the snake game.
         evaluation = SnakeGame(aiSnake, lastMove, fruit)
 
-        # Trying to counter-act spinning by killing the snake if it spins and spawning in a new one.
+        # To counter-act spinning by killing the snake if it spins and spawning in a new one.
         if steps % 200 == 0 and steps != 0 and penalty == True:
             if penalty == True:
-                player.penalties += 1
-            player.deaths += 1
+                agent.penalties += 1
+            agent.deaths += 1
             aiSnake = respawn()
             penalty = True
 
         # If the snake gets a fruit then we start counting steps.
-        if evaluation[2]:
+        if evaluation[1]:
             fruit = Fruit(0, 0)
             fruit.generateFruit()
             avg_steps.append(steps)
             penalty = False
 
         # Keeps track of deaths.
-        if evaluation[3] == False:
-            if evaluation[0] > player.hScore:
-                player.hScore = evaluation[0]
-            player.deaths += 1
+        if evaluation[2] == False:
+            if evaluation[0] > agent.hScore:
+                agent.hScore = evaluation[0]
+            agent.deaths += 1
             avg_steps = []
         
-        if len(avg_steps) > 0:
-            player.avg_steps = sum(avg_steps) / len(avg_steps)
+        # if len(avg_steps) > 0:
+        #     agent.avg_steps = sum(avg_steps) / len(avg_steps)
 
+        # Return the agent after training.
         if steps == 1000:
             return
             
@@ -367,27 +372,27 @@ def fitness(population):
 
     scores = []
     # - int(player.avg_steps * 100)
-    for player in population:
-        score = player.hScore * 5000  - player.deaths * 150 - player.penalties * 1000
-        scores.append((score, player))
+
+    # Review how the agent performed in that generation and return it's score.
+    for agent in population:
+        score = agent.hScore * 5000  - agent.deaths * 150 - agent.penalties * 1000
+        scores.append((score, agent))
     return scores
 
 def crossover(population):
 
-    # Split the n best from last generation into mother and father.
+    # Split the 12 best from last generation into 2 lists so we don't crossover from the same parent.
     mother = population[0:5]
     father = population[6:11]
     newGeneration = []
 
-    # Elitism
-    # newGeneration.append(population[0])
-
+    # Will crossover from the best 12 agents in the previous generation to create the next generation.
     while len(newGeneration) < 50:
-        child = Player(0, 0, 0, 0, 0)
-        parent = random.randint(0, len(mother) - 1)
+        child = Agent(0, 0, 0, 0, 0)
         for j in range(amountOfChromosomes):
 
             coin = random.getrandbits(1)
+            parent = random.randint(0, len(mother) - 1)
 
             if coin == 0:
                 child.insert(mother[parent].chromosome[j], j)
@@ -402,6 +407,7 @@ def mutation(population):
 
     prob = random.randint(0, 100)
 
+    # Mutate the next generation at random to promote diversity and try avoid the local minima.
     if prob % 48 == 0:
         for j in range(random.randint(0, 24), random.randint(25, 50)):
             for i in range(len(population[j].chromosome)):
@@ -410,11 +416,14 @@ def mutation(population):
     
     return population
 
-def trainGen(population):
+def trainGen(population, numGens):
 
     generation = 0
 
+    # Train the n number of agents for x number of generations.
     while True:
+
+        # Record how long each generation takes for debugging and efficiency purposes.
         start = time.time()
 
         # Priting out the current generation.
@@ -426,14 +435,17 @@ def trainGen(population):
         # Running the game for every agent in the generation.
         for i in range(50):
             runAgent(population[i])
-            
+        
+        # Finding the fitness for the generation and sorting by score to find best agents.
         currentFitness = fitness(population)
         currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
 
+        # This is just for displaying the current generation in one list.
         cFitness = []
         for x in currentFitness:
             cFitness.append(x[0])
 
+        # Printing the generation's score and current maximum fitness score.
         print()
         print(cFitness)
         print()
@@ -455,16 +467,18 @@ def trainGen(population):
 
         # --------------------------------- DEBUGGING ---------------------------------
 
+        # Adding the best 12 agents to the next generation for crossover and mutation.
         for i in range(12):
             newGeneration.append(currentFitness[i][1])
         
         population = crossover(newGeneration)
         population = mutation(population)
+
         generation += 1
         end = time.time()
         
         # How many generations it's going to train for.
-        if generation == 100:
+        if generation == numGens:
             return currentFitness
 
         print("Time for generation: {}".format(end - start))
@@ -491,7 +505,10 @@ def displayGame(snake, lastMove, agent, fruit):
             pygame.draw.rect(screen, pygame.Color(GRASS), pygame.Rect(x, y, blockSize, blockSize))
             pygame.draw.rect(screen, BLACK, pygame.Rect(x, y, blockSize, blockSize), 1)
 
+    # Drawing the snake's head.
     pygame.draw.rect(screen, BLACK, snake.draw())
+
+    # Generating and drawing the fruit.
     fruit.generateFruit()
     fruit.drawFruit()
 
@@ -502,10 +519,10 @@ def displayGame(snake, lastMove, agent, fruit):
     snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
     
     score = 0
-    step = 0
 
     while True:
 
+        # This is so the user can close the window anytime when displaying.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -553,7 +570,7 @@ def displayGame(snake, lastMove, agent, fruit):
         # This moves the snake at a certain time interval.
         if clock.tick(6):
 
-        #     # Set to true for debugging
+            # Uses the trained agent to play the game with it's neural network. (Set to true for debugging).
             move = makeMove(agent, snake, lastMove, fruit, False)
 
             if move[0] == max(move):
@@ -572,7 +589,7 @@ def displayGame(snake, lastMove, agent, fruit):
             MoveSnake(lastMove, snake, True)
             pygame.display.update()
 
-        # When you get a fruit it will replace it with another randomly generated fruit.
+        # When the agent gets a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
         if snake.x == fruit.x and snake.y == fruit.y:
 
@@ -599,9 +616,11 @@ def displayGame(snake, lastMove, agent, fruit):
                 if snake.x == parts.x and snake.y == parts.y:
                     return
 
+        # If the snake hits a wall on the horizontal axis.
         if snake.x < 20 or snake.x > 860:
             return
 
+        # If the snake hits a wall on the vertical axis.
         elif snake.y < 20 or snake.y > 700:
             return
 
@@ -622,16 +641,19 @@ color_dark = (100,100,100)
 
 amountOfChromosomes = 16321 
 
-# Creating a population of chromosomes for the AIagent.
+# Creating a population of agents.
 population = []
 for i in range(50):
-    population.append(Player(0, 0, 0, 0, 0))
+    population.append(Agent(0, 0, 0, 0, 0))
     population[i].createPopulation()
 
 # Run the training.
-results = trainGen(population)
+results = trainGen(population, 100)
+
+# This is for when the training is completed it will wait for user input to display results.
 x = input("are you ready to see the results?")
 
+# Display the 20 best agents.
 for i in range(20):
     print("Fitness: {}".format(results[i][0]))
     displayGame(Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), []), "left", results[i][1], Fruit(0, 0))
