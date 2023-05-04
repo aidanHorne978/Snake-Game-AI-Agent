@@ -6,7 +6,7 @@ import pygame
 
 class Agent:
 
-    def __init__(self, hScore, deaths, penalties, avg_steps, distance):
+    def __init__(self, hScore, deaths, penalties, avg_steps):
         
         # Initilizing with the size of the player's chromosomes.
         self.chromosome = np.zeros(amountOfChromosomes)
@@ -222,16 +222,16 @@ def makeMove(agent, snake, lastMove, fruit, debug):
 
     # Gives the relative position of the food like posFood. Index 0 will have -1 if food is left, else 0. Index 1 will have -1 if food is right, else 0.
     # Index 2 will have -1 if food is up, else 0, Index 3 will have -1 if food is down, else 0.
-    relativePos = [0, 0, 0, 0]
-    if fruit.x < snake.x:
-        relativePos[0] = -1
-    elif fruit.x > snake.x:
-        relativePos[1] = 1
+    # relativePos = [0, 0, 0, 0]
+    # if fruit.x < snake.x:
+    #     relativePos[0] = -1
+    # elif fruit.x > snake.x:
+    #     relativePos[1] = 1
         
-    if fruit.y < snake.y:
-        relativePos[2] = -1
-    elif fruit.y > snake.y:
-        relativePos[3] = 1
+    # if fruit.y < snake.y:
+    #     relativePos[2] = -1
+    # elif fruit.y > snake.y:
+    #     relativePos[3] = 1
 
     # Current direction the snake is moving aka lastMove variable.
     currdirection = [0, 0, 0, 0]
@@ -291,8 +291,9 @@ def runAgent(agent):
 
     # Initlizing variables needed for each individual agent.
     steps = 0
+    firstFruit = 0
+    first = True
     lastMove = "left"
-    avg_steps = []
     penalty = True
 
     fruit = Fruit(0, 0)
@@ -347,9 +348,13 @@ def runAgent(agent):
 
         # If the snake gets a fruit then we start counting steps.
         if evaluation[1]:
+            if first:
+                firstFruit = steps
+                first = False
             fruit = Fruit(0, 0)
             fruit.generateFruit()
-            avg_steps.append(steps)
+            agent.avg_steps.append(steps - firstFruit)
+            firstFruit = steps
             penalty = False
 
         # Keeps track of deaths.
@@ -357,13 +362,11 @@ def runAgent(agent):
             if evaluation[0] > agent.hScore:
                 agent.hScore = evaluation[0]
             agent.deaths += 1
-            avg_steps = []
-        
-        # if len(avg_steps) > 0:
-        #     agent.avg_steps = sum(avg_steps) / len(avg_steps)
+            first = True
+
 
         # Return the agent after training.
-        if steps == 1000:
+        if steps == 2500:
             return
             
         steps += 1
@@ -371,11 +374,12 @@ def runAgent(agent):
 def fitness(population):
 
     scores = []
-    # - int(player.avg_steps * 100)
-
     # Review how the agent performed in that generation and return it's score.
     for agent in population:
-        score = agent.hScore * 5000  - agent.deaths * 150 - agent.penalties * 1000
+        if agent.hScore > 0:
+            score = agent.hScore * 5000  - agent.deaths * 150 - int(sum(agent.avg_steps) / len(agent.avg_steps) * 100) - agent.penalties * 1000
+        else:
+            score = agent.hScore * 5000  - agent.deaths * 150 - agent.penalties * 1000
         scores.append((score, agent))
     return scores
 
@@ -388,7 +392,7 @@ def crossover(population):
 
     # Will crossover from the best 12 agents in the previous generation to create the next generation.
     while len(newGeneration) < 50:
-        child = Agent(0, 0, 0, 0, 0)
+        child = Agent(0, 0, 0, [])
         for j in range(amountOfChromosomes):
 
             coin = random.getrandbits(1)
@@ -527,7 +531,7 @@ def displayGame(snake, lastMove, agent, fruit):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-           
+
         # --------------------------------- DEBUGGING ---------------------------------
         # if clock.tick(6):
 
@@ -644,7 +648,7 @@ amountOfChromosomes = 16321
 # Creating a population of agents.
 population = []
 for i in range(50):
-    population.append(Agent(0, 0, 0, 0, 0))
+    population.append(Agent(0, 0, 0, []))
     population[i].createPopulation()
 
 # Run the training.
