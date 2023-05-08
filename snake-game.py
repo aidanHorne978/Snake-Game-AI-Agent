@@ -10,6 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.backends.backend_agg as agg
 import pylab
+from matplotlib import style
 
 # Snake class
 class Snake:
@@ -226,7 +227,7 @@ def PlayerSnakeGame():
     # Drawing the grid.
     DrawGrid(screen)
 
-    snake = Snake(width / 2 - 30, height / 2 - 60, [])
+    snake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
     fruit = Fruit(0, 0)
     pygame.draw.rect(screen, BLACK, snake.draw())
     fruit.generateFruit()
@@ -329,7 +330,7 @@ def GameOver():
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
-                SnakeGame()
+                PlayerSnakeGame()
 
         # To find where the mouse is at all times.
         mouse = pygame.mouse.get_pos()
@@ -590,12 +591,12 @@ def runAgent(agent):
     penalty = True
 
     fruit = Fruit(0, 0)
-    aiSnake = Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), [])
+    aiSnake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
     fruit.generateFruit()
 
     # Creates a new snake in a random position with a new fruit aswell to promote dynamic behaviour.
     def respawn():
-        newSnake = Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), [])
+        newSnake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
         fruit = Fruit(0, 0)
         fruit.generateFruit()
         return newSnake
@@ -667,8 +668,8 @@ def runAgent(agent):
 def trainGen(numGens):
 
     generation = 0
-    group = 8
-    size = group * 5
+    group = 4
+    size = group * 10
 
     # Creating a population of agents.
     population = []
@@ -676,22 +677,20 @@ def trainGen(numGens):
         population.append(Agent(0, 0, 0, []))
         population[i].createPopulation()
 
+    variable = Value('i', 0)
     conn2, conn1 = Pipe(duplex = False)
-    p1 = Process(target = trainScreen, args=(conn2,))
+    p1 = Process(target = trainScreen, args=(conn2, numGens, variable,))
     p1.start()
 
     # Train the n number of agents for x number of generations.
     while True:
-
-        # Priting out the current generation.
-        print(f"Generation: {generation}")
 
         newGeneration = []
         
         # Running the game for every agent in the generation. Run's the agents in size of group with 10 processes.
         sublists = [population[i:i+group] for i in range(0, len(population), group)]
         newPop = []
-        with Pool(5) as pool:
+        with Pool(10) as pool:
             for sublist in sublists:
                 result = pool.map_async(runAgent, sublist)
                 for result in result.get():
@@ -704,50 +703,9 @@ def trainGen(numGens):
         cFitness = []
         for x in currentFitness:
             cFitness.append(x[0])
-        
+
         conn1.send(cFitness)
-
         currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
-
-        # if generation % 33 == 0 and generation > 0 and len(population) > 21:
-        #     group -= 1
-        #     size = group * 10
-
-        # If the generation isn't past 100,000 fitness by generation 74. Then it's an unlucky population and we should start again.
-        # if generation % 49 == 0 and int(sum(cFitness) / 2) < 100000 and generation != 0:
-        #     for agent in population:
-        #         agent.createPopulation()
-        #     numGens += 50
-        #     group = 5
-        #     size = group * 10
-
-        #     print("\n\n\n\n")
-        #     print("Bad population, Restarting")
-        #     print("\n\n\n\n")
-
-
-
-        # # Printing the generation's score and current maximum fitness score.
-        # print()
-        # print(cFitness)
-        # print()
-        # print("Current Max: {}".format(currentFitness[0][0]))
-        # print()
-
-        # # --------------------------------- DEBUGGING ---------------------------------
-
-        # # if generation > 90:
-        # #     for i in range(3):
-        # #         print("Score: {}".format(currentFitness[i][1].hScore))
-        # #         print("Deaths: {}".format(currentFitness[i][1].deaths))
-        # #         print("Penaltys: {}".format(currentFitness[i][1].penalties))
-        # #         print("Average steps: {}".format(currentFitness[i][1].avg_steps))
-        # #         print()
-        # #         displayGame(Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), []), "left", population[i], Fruit(0, 0))
-        # #     pygame.quit()
-        # #     input("Are you ready for the next run? ")
-
-        # # --------------------------------- DEBUGGING ---------------------------------
 
         # # Adding the best 12 agents to the next generation for crossover and mutation.
         for i in range(12):
@@ -755,14 +713,14 @@ def trainGen(numGens):
 
         population = crossover(newGeneration, size)
         population = mutation(population, size)
-
-        generation += 1
     
         # # How many generations it's going to train for.
         if generation == numGens + 1:
-            return currentFitness
+            return currentFitness, variable.value
+    
+        generation += 1
 
-def trainScreen(connection):
+def trainScreen(connection, numGens, variable):
 
     # Initilizing
     pygame.init()
@@ -771,6 +729,8 @@ def trainScreen(connection):
     screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
     bigfont = pygame.font.SysFont('Corbel',70)
     smallfont = pygame.font.SysFont('Corbel',35)
+    smallerfont = pygame.font.SysFont('Corbel', 20)
+    color = (255,255,255) 
     color_light = (128,128,128) 
     color_dark = (100,100,100)
 
@@ -798,74 +758,128 @@ def trainScreen(connection):
     generation = 0
 
     while True:
-        start = timer.time()
-        fitness = connection.recv()
-        highest.append(max(fitness))
 
-        fig = pylab.figure(figsize = [6,5])
-        fig2 = pylab.figure(figsize = [6,5])
-        ax = fig.gca()
-        ax2 = fig2.gca()
-        ax.plot(fitness[::-1])
-        ax.set_title("Fitness scores of the current generation.")
-        ax.set_xlabel("Agent number.")
-        ax.set_ylabel("Score.")
-        ax.yaxis.set_label_position("right")
-        ax2.plot(highest)
-        ax2.set_title("Max score of each generation.")
-        ax2.set_xlabel("Amount of generations.")
-        ax2.set_ylabel("Score.")
-        ax2.yaxis.set_label_position("right")
-        ax2.set_xlim(1)
+        if generation == numGens + 1:
+            screen.fill(background_colour)
+            trainText = bigfont.render("Training complete.", True, color_dark)
+            screen.blit(trainText, (center[0] - 60, center[1] - 350))
 
-        canvas = agg.FigureCanvasAgg(fig)
-        canvas2 = agg.FigureCanvasAgg(fig2)
-        canvas.draw()
-        canvas2.draw()
-        renderer = canvas.get_renderer()
-        renderer2 = canvas2.get_renderer()
-        raw_data = renderer.tostring_rgb()
-        raw_data2 = renderer2.tostring_rgb()
+            size = canvas.get_width_height()
+            allGens = pygame.image.fromstring(raw_data2, size, "RGB")
+            screen.blit(allGens, (center[0] + 185, center[1] - 250))
+            currentGen = pygame.image.fromstring(raw_data, size, "RGB")
+            screen.blit(currentGen, (center[0] - 435, center[1] - 250))
+
+            gamemode = smallfont.render("Please select a gamemode.", True, color_dark)
+            screen.blit(gamemode, (center[0] - 18, center[1] + 270))
+            
+            mouse = pygame.mouse.get_pos()
+
+            quit = smallerfont.render('quit' , True , color)
+            deathmatch = smallfont.render('deathmatch' , True , color)
+            score = smallfont.render('high score', True, color)
+
+            quitButton = width / 2 + 95 <= mouse[0] <= width / 2 + 255 and height / 2 + 430 <= mouse[1] <= height / 2 + 470
+            deathmatchButton = width / 2 - 80 <= mouse[0] <= width / 2 + 150 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
+            scoreButton = width / 2 + 200 <= mouse[0] <= width / 2 + 430 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
+
+            if deathmatchButton:
+                pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 80,height/2 + 320, 230, 90)) 
+            else: 
+                pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 80,height/2 + 320, 230, 90))
+            
+            if scoreButton:
+                pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 200,height/2 + 320, 230, 90))
+            else:
+                pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 200,height/2 + 320, 230, 90))
+
+            # Draws quit button as lit up if mouse is hovering, otherwise draws it normally.
+            if quitButton:
+                pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 95,height/2 + 430, 160, 40))
+            else: 
+                pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 95,height/2 + 430, 160, 40)) 
+            
+            screen.blit(quit, (center[0] + 160, center[1] + 440)) 
+            screen.blit(deathmatch, (center[0] - 55, center[1] + 350))
+            screen.blit(score, (center[0] + 245, center[1] + 350))
+            
+            pygame.display.flip()
+
+            matplotlib.pyplot.close(fig)
+            matplotlib.pyplot.close(fig2)
+
+            variable.value = 2
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and quitButton:
+                pygame.quit()
+                exit()
+
+        if generation <= numGens:
+            fitness = connection.recv()
+            highest.append(max(fitness))
+
+            with matplotlib.pyplot.style.context('ggplot'):
+                fig = pylab.figure(figsize = [6,5])
+                fig2 = pylab.figure(figsize = [6,5])
+                ax = fig.gca()
+                ax2 = fig2.gca()
+                ax.plot(fitness[::-1])
+                ax.set_title("Fitness scores of the current generation.")
+                ax.set_xlabel("Agent number.")
+                ax.set_ylabel("Score.")
+                ax.yaxis.set_label_position("right")
+                ax2.plot(highest)
+                ax2.set_title("Max score of each generation.")
+                ax2.set_xlabel("Amount of generations.")
+                ax2.set_ylabel("Score.")
+                ax2.yaxis.set_label_position("right")
+                ax2.set_xlim(1)
+
+            canvas = agg.FigureCanvasAgg(fig)
+            canvas2 = agg.FigureCanvasAgg(fig2)
+            canvas.draw()
+            canvas2.draw()
+            renderer = canvas.get_renderer()
+            renderer2 = canvas2.get_renderer()
+            raw_data = renderer.tostring_rgb()
+            raw_data2 = renderer2.tostring_rgb()
         
-        if counter == 3:
-            counter = 0
+            if counter == 3:
+                counter = 0
 
-        if flick:
-            screen.fill(background_colour)
-            trainText = bigfont.render(trainingText[counter], True, color_light)
-            screen.blit(trainText, (center[0] + 50, center[1] - 245))
-            flick = False
+            if flick:
+                screen.fill(background_colour)
+                trainText = bigfont.render(trainingText[counter], True, color_light)
+                screen.blit(trainText, (center[0] + 50, center[1] - 245))
+                flick = False
 
-        else:
-            screen.fill(background_colour)
-            trainText = bigfont.render(trainingText[counter], True, color_dark)
-            screen.blit(trainText, (center[0] + 50, center[1] - 245))
-            flick = True
+            else:
+                screen.fill(background_colour)
+                trainText = bigfont.render(trainingText[counter], True, color_dark)
+                screen.blit(trainText, (center[0] + 50, center[1] - 245))
+                flick = True
 
-        generationText = smallfont.render(f"Current generation: {generation}", True, color_dark)
-        screen.blit(generationText, (center[0] + 30, center[1] + 400))
+            generationText = smallfont.render(f"Current generation: {generation}", True, color_dark)
+            screen.blit(generationText, (center[0] + 30, center[1] + 400))
 
-        size = canvas.get_width_height()
-        allGens = pygame.image.fromstring(raw_data2, size, "RGB")
-        screen.blit(allGens, (center[0] + 185, center[1] - 140))
-        currentGen = pygame.image.fromstring(raw_data, size, "RGB")
-        screen.blit(currentGen, (center[0] - 435, center[1] - 140))
-        pygame.display.flip()
+            size = canvas.get_width_height()
+            allGens = pygame.image.fromstring(raw_data2, size, "RGB")
+            screen.blit(allGens, (center[0] + 185, center[1] - 140))
+            currentGen = pygame.image.fromstring(raw_data, size, "RGB")
+            screen.blit(currentGen, (center[0] - 435, center[1] - 140))
+            pygame.display.flip()
 
-        matplotlib.pyplot.close(fig)
-        matplotlib.pyplot.close(fig2)
+            matplotlib.pyplot.close(fig)
+            matplotlib.pyplot.close(fig2)
 
-        counter += 1
-        generation += 1
+            counter += 1
+            generation += 1
 
-        end = timer.time()
-        print(end - start)
     
 
 # Grid size.
@@ -906,17 +920,15 @@ if __name__ == '__main__':
     lastMove = "left"
 
     # Runs the main menu.
-    result = MainMenu()
+    gameState = MainMenu()
 
-    if result == 1:
+    if gameState == 1:
         PlayerSnakeGame()
 
-    elif result == 2:
-
-        results = trainGen(75)
-
-        # This is for when the training is completed it will wait for user input to display results.
-        x = input("are you ready to see the results?")
+    elif gameState == 2:
+        results, gamemode = trainGen(0)
+        print("i returned")
+        print(gamemode)
 
         # Display the 20 best agents.
         # for i in range(20):
