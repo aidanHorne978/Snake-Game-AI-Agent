@@ -667,12 +667,12 @@ def runAgent(agent):
 def trainGen(numGens):
 
     generation = 0
-    group = 7
+    group = 8
     size = group * 5
 
     # Creating a population of agents.
     population = []
-    for i in range(45):
+    for i in range(40):
         population.append(Agent(0, 0, 0, []))
         population[i].createPopulation()
 
@@ -691,7 +691,7 @@ def trainGen(numGens):
         # Running the game for every agent in the generation. Run's the agents in size of group with 10 processes.
         sublists = [population[i:i+group] for i in range(0, len(population), group)]
         newPop = []
-        with Pool(7) as pool:
+        with Pool(5) as pool:
             for sublist in sublists:
                 result = pool.map_async(runAgent, sublist)
                 for result in result.get():
@@ -700,17 +700,18 @@ def trainGen(numGens):
 
         # Finding the fitness for the generation and sorting by score to find best agents.
         currentFitness = fitness(population)
-        currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
-
-        # if generation % 33 == 0 and generation > 0 and len(population) > 21:
-        #     group -= 1
-        #     size = group * 10
 
         cFitness = []
         for x in currentFitness:
             cFitness.append(x[0])
         
         conn1.send(cFitness)
+
+        currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
+
+        # if generation % 33 == 0 and generation > 0 and len(population) > 21:
+        #     group -= 1
+        #     size = group * 10
 
         # If the generation isn't past 100,000 fitness by generation 74. Then it's an unlucky population and we should start again.
         # if generation % 49 == 0 and int(sum(cFitness) / 2) < 100000 and generation != 0:
@@ -765,11 +766,9 @@ def trainScreen(connection):
 
     # Initilizing
     pygame.init()
-
-    start = timer.time()
     
     # Fonts used.
-    screen = pygame.display.set_mode(res)
+    screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
     bigfont = pygame.font.SysFont('Corbel',70)
     smallfont = pygame.font.SysFont('Corbel',35)
     color_light = (128,128,128) 
@@ -790,27 +789,43 @@ def trainScreen(connection):
     
     trainText = bigfont.render(trainingText[0], True, color_dark)
     screen.fill(background_colour)
-    screen.blit(trainText, (center[0] - 135, center[1] - 275))
-    end = timer.time()
-    timeFormat = ("Elapsed time: " + timer.strftime("%H:%M:%S.{}".format(str(end - start % 1)[1:])[:8], timer.gmtime(end - start)))
-    timeText = smallfont.render(timeFormat, True, color_dark)
-    screen.blit(timeText, (center[0] - 180, center[1] + 250))
+    screen.blit(trainText, (center[0] + 50, center[1] - 245))
 
     flick = False
     pygame.display.flip()
 
+    highest = []
+    generation = 0
+
     while True:
-
+        start = timer.time()
         fitness = connection.recv()
+        highest.append(max(fitness))
 
-        fig = pylab.figure(figsize=[5, 5], dpi=100,)
+        fig = pylab.figure(figsize = [6,5])
+        fig2 = pylab.figure(figsize = [6,5])
         ax = fig.gca()
+        ax2 = fig2.gca()
         ax.plot(fitness[::-1])
+        ax.set_title("Fitness scores of the current generation.")
+        ax.set_xlabel("Agent number.")
+        ax.set_ylabel("Score.")
+        ax.yaxis.set_label_position("right")
+        ax2.plot(highest)
+        ax2.set_title("Max score of each generation.")
+        ax2.set_xlabel("Amount of generations.")
+        ax2.set_ylabel("Score.")
+        ax2.yaxis.set_label_position("right")
+        ax2.set_xlim(1)
 
         canvas = agg.FigureCanvasAgg(fig)
+        canvas2 = agg.FigureCanvasAgg(fig2)
         canvas.draw()
+        canvas2.draw()
         renderer = canvas.get_renderer()
+        renderer2 = canvas2.get_renderer()
         raw_data = renderer.tostring_rgb()
+        raw_data2 = renderer2.tostring_rgb()
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
@@ -824,39 +839,33 @@ def trainScreen(connection):
         if flick:
             screen.fill(background_colour)
             trainText = bigfont.render(trainingText[counter], True, color_light)
-            screen.blit(trainText, (center[0] - 135, center[1] - 325))
-
-            end = timer.time()
-            timeFormat = ("Elapsed time: " + timer.strftime("%H:%M:%S.{}".format(str(end - start % 1)[1:])[:8], timer.gmtime(end - start)))
-            timeText = smallfont.render(timeFormat, True, color_light)
-            screen.blit(timeText, (center[0] - 180, center[1] + 280))
-
-            size = canvas.get_width_height()
-            surf = pygame.image.fromstring(raw_data, size, "RGB")
-            screen.blit(surf, (center[0] - 260, center[1] - 240))
-            pygame.display.flip()
-
+            screen.blit(trainText, (center[0] + 50, center[1] - 245))
             flick = False
 
         else:
             screen.fill(background_colour)
             trainText = bigfont.render(trainingText[counter], True, color_dark)
-            screen.blit(trainText, (center[0] - 135, center[1] - 325))
-
-            end = timer.time()
-            timeFormat = ("Elapsed time: " + timer.strftime("%H:%M:%S.{}".format(str(end - start % 1)[1:])[:8], timer.gmtime(end - start)))
-            timeText = smallfont.render(timeFormat, True, color_dark)
-            screen.blit(timeText, (center[0] - 180, center[1] + 280))
-
-            size = canvas.get_width_height()
-            surf = pygame.image.fromstring(raw_data, size, "RGB")
-            screen.blit(surf, (center[0] - 260, center[1] - 240))
-            pygame.display.flip()
-
+            screen.blit(trainText, (center[0] + 50, center[1] - 245))
             flick = True
 
+        generationText = smallfont.render(f"Current generation: {generation}", True, color_dark)
+        screen.blit(generationText, (center[0] + 30, center[1] + 400))
+
+        size = canvas.get_width_height()
+        allGens = pygame.image.fromstring(raw_data2, size, "RGB")
+        screen.blit(allGens, (center[0] + 185, center[1] - 140))
+        currentGen = pygame.image.fromstring(raw_data, size, "RGB")
+        screen.blit(currentGen, (center[0] - 435, center[1] - 140))
+        pygame.display.flip()
+
         matplotlib.pyplot.close(fig)
+        matplotlib.pyplot.close(fig2)
+
         counter += 1
+        generation += 1
+
+        end = timer.time()
+        print(end - start)
     
 
 # Grid size.
