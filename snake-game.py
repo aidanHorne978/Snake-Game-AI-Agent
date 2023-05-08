@@ -715,7 +715,7 @@ def trainGen(numGens):
         population = mutation(population, size)
     
         # # How many generations it's going to train for.
-        if generation == numGens + 1:
+        if generation == numGens:
             return currentFitness, variable.value
     
         generation += 1
@@ -808,7 +808,6 @@ def trainScreen(connection, numGens, variable):
             matplotlib.pyplot.close(fig)
             matplotlib.pyplot.close(fig2)
 
-            variable.value = 2
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
@@ -818,6 +817,12 @@ def trainScreen(connection, numGens, variable):
             if event.type == pygame.MOUSEBUTTONDOWN and quitButton:
                 pygame.quit()
                 exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and scoreButton:
+                variable.value = 1
+                return variable
+            if event.type == pygame.MOUSEBUTTONDOWN and deathmatchButton:
+                variable.value = 2
+                return variable
 
         if generation <= numGens:
             fitness = connection.recv()
