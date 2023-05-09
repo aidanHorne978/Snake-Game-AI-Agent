@@ -12,7 +12,7 @@
      - Retrain if the agent for any reason.
      - View the agent playing the snake game.
      - Go head to head in a normal game of snake competing for the highest score.
-     - ----------------------------------- Not implemented yet -----------------------------------
+     - --------------------------------------------------------- Not implemented yet -------------------------------------------------------------
          * Will have a deathmatch gamemode where you and the agent are both in the same game fighting to hit each other and get the highest score.
 
 ## 4th May 2023:
