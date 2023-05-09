@@ -5,7 +5,8 @@ import pygame
 import random
 import numpy as np
 import time as timer
-from multiprocessing import Pool, Process, Pipe, Value
+from multiprocessing import Pool, Process, Pipe, Queue
+from multiprocessing.managers import BaseManager
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.backends.backend_agg as agg
@@ -74,6 +75,10 @@ class Agent:
     # Initilizes the chromosomes for a player.
     def createPopulation(self):
         self.chromosome = np.random.uniform(-1, 1, amountOfChromosomes)
+
+
+    # nothing
+    pass
 
 def MainMenu():
 
@@ -416,6 +421,148 @@ def SnakeGame(agent, lastMove, fruit):
         # If the snake didn't die then we return the score, whether they scored or not and True indicating it's still alive.
         return score, scored, True
 
+def displayGame(lastMove, agent, fruit):
+
+    # Creating the screen.
+    global res
+    global screen
+    background_colour = pygame.Color("#8fcb9e")
+    snake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
+    res = (900, 800)
+    screen = pygame.display.set_mode(res)
+    pygame.display.set_caption('Snake Game')
+    screen.fill(background_colour)
+    pygame.display.flip()
+    pygame.init()
+
+    smallfont = pygame.font.SysFont('Corbel',35)
+    clock = pygame.time.Clock()
+
+    # Drawing the grid.
+    for x in range(blockSize, res[0] - 20, blockSize):
+        for y in range(blockSize, res[1] - 80, blockSize):
+            pygame.draw.rect(screen, pygame.Color(GRASS), pygame.Rect(x, y, blockSize, blockSize))
+            pygame.draw.rect(screen, BLACK, pygame.Rect(x, y, blockSize, blockSize), 1)
+
+    # Drawing the snake's head.
+    pygame.draw.rect(screen, BLACK, snake.draw())
+
+    # Generating and drawing the fruit.
+    fruit.generateFruit()
+    fruit.drawFruit()
+
+    # Head of snake.
+    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
+
+    # Tail of snake.
+    snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
+    
+    score = 0
+
+    while True:
+
+        # This is so the user can close the window anytime when displaying.
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+        # --------------------------------- DEBUGGING ---------------------------------
+        # if clock.tick(6):
+
+        #     newEvent = pygame.event.wait()
+        #     if newEvent.type == pygame.KEYDOWN:
+                        
+        #         MoveSnake(lastMove, snake, True)
+        #         move = makeMove(agent, snake, lastMove, fruit, True)
+
+        #         print("Snake x: {}\tSnake y: {}\tFruit x: {}\tFruit y: {}".format(snake.x, snake.y, fruit.x, fruit.y))
+        #         print()
+        #         print("Wall: {}".format(move[1][0]))
+        #         print("Current Direction: {}".format(move[1][1]))
+        #         print("Relative X and Y: {}".format(move[1][2]))
+
+        #         if move[0][0] == max(move[0]):
+        #             if lastMove != "right":
+        #                 lastMove = "left"
+        #         if move[0][1] == max(move[0]):
+        #             if lastMove != "left":
+        #                 lastMove = "right"
+        #         if move[0][2] == max(move[0]):
+        #             if lastMove != "down":
+        #                 lastMove = "up"
+        #         if move[0][3] == max(move[0]):
+        #             if lastMove != "up":
+        #                 lastMove = "down"
+
+        #         pygame.display.update()
+
+        # --------------------------------- DEBUGGING ---------------------------------
+
+
+        # Score variable.
+        scoreTitle = smallfont.render('score:' , True , BLACK)
+        scoreValue = smallfont.render(str(score), True, BLACK)
+        screen.blit(scoreTitle, (center[0] - 75, center[1] + 330))
+        screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+
+        # This moves the snake at a certain time interval.
+        if clock.tick(6):
+
+            # Uses the trained agent to play the game with it's neural network. (Set to true for debugging).
+            move = makeMove(agent, snake, lastMove, fruit, False)
+
+            if move[0] == max(move):
+                if lastMove != "right":
+                    lastMove = "left"
+            if move[1] == max(move):
+                if lastMove != "left":
+                    lastMove = "right"
+            if move[2] == max(move):
+                if lastMove != "down":
+                    lastMove = "up"
+            if move[3] == max(move):
+                if lastMove != "up":
+                    lastMove = "down"
+
+            MoveSnake(lastMove, snake, fruit, True)
+            pygame.display.update()
+
+        # When the agent gets a fruit it will replace it with another randomly generated fruit.
+        # Then it will add one to the score and display it.
+        if snake.x == fruit.x and snake.y == fruit.y:
+
+            # Adds a part to the body.
+            Grow(snake, lastMove)
+
+            # Generate a new fruit.
+            fruit.generateFruit()
+            fruit.drawFruit()
+
+            # Increase score by one.
+            score += 1
+
+            # Erase the old score and put in the new score.
+            scoreValue = smallfont.render(str(score), True, BLACK)
+            screen.fill(background_colour, (center[0] + 15, center[1] + 330, 100, 100))
+            screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
+        
+        pygame.display.update()
+
+        # If the snake hit's itself.
+        if len(snake.body) > 2:
+            for parts in snake.body[1:]:
+                if snake.x == parts.x and snake.y == parts.y:
+                    return
+
+        # If the snake hits a wall on the horizontal axis.
+        if snake.x < 20 or snake.x > 860:
+            return
+
+        # If the snake hits a wall on the vertical axis.
+        elif snake.y < 20 or snake.y > 700:
+            return
+
 def sigmoid(x):
     
     # Activation function.
@@ -665,22 +812,18 @@ def runAgent(agent):
             
         steps += 1
 
-def trainGen(numGens):
+def trainGen(numGens, connection):
 
     generation = 0
     group = 4
     size = group * 10
+    global finalGeneration
 
     # Creating a population of agents.
     population = []
     for i in range(40):
         population.append(Agent(0, 0, 0, []))
         population[i].createPopulation()
-
-    variable = Value('i', 0)
-    conn2, conn1 = Pipe(duplex = False)
-    p1 = Process(target = trainScreen, args=(conn2, numGens, variable,))
-    p1.start()
 
     # Train the n number of agents for x number of generations.
     while True:
@@ -704,7 +847,7 @@ def trainGen(numGens):
         for x in currentFitness:
             cFitness.append(x[0])
 
-        conn1.send(cFitness)
+        connection.send(cFitness)
         currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
 
         # # Adding the best 12 agents to the next generation for crossover and mutation.
@@ -716,11 +859,12 @@ def trainGen(numGens):
     
         # # How many generations it's going to train for.
         if generation == numGens:
-            return currentFitness, variable.value
+            connection.send(currentFitness)
+            return 
     
         generation += 1
 
-def trainScreen(connection, numGens, variable):
+def AISnakeGame():
 
     # Initilizing
     pygame.init()
@@ -749,83 +893,33 @@ def trainScreen(connection, numGens, variable):
     
     trainText = bigfont.render(trainingText[0], True, color_dark)
     screen.fill(background_colour)
-    screen.blit(trainText, (center[0] + 50, center[1] - 245))
+    screen.blit(trainText, (center[0] + 50, center[1] - 350))
 
     flick = False
     pygame.display.flip()
 
     highest = []
     generation = 0
+    numGens = 0
 
+    conn1, conn2  = Pipe(duplex = False)
+    p1 = Process(target = trainGen, args=(numGens, conn2,))
+    p1.start()
+
+    # Training loop
     while True:
-
-        if generation == numGens + 1:
-            screen.fill(background_colour)
-            trainText = bigfont.render("Training complete.", True, color_dark)
-            screen.blit(trainText, (center[0] - 60, center[1] - 350))
-
-            size = canvas.get_width_height()
-            allGens = pygame.image.fromstring(raw_data2, size, "RGB")
-            screen.blit(allGens, (center[0] + 185, center[1] - 250))
-            currentGen = pygame.image.fromstring(raw_data, size, "RGB")
-            screen.blit(currentGen, (center[0] - 435, center[1] - 250))
-
-            gamemode = smallfont.render("Please select a gamemode.", True, color_dark)
-            screen.blit(gamemode, (center[0] - 18, center[1] + 270))
-            
-            mouse = pygame.mouse.get_pos()
-
-            quit = smallerfont.render('quit' , True , color)
-            deathmatch = smallfont.render('deathmatch' , True , color)
-            score = smallfont.render('high score', True, color)
-
-            quitButton = width / 2 + 95 <= mouse[0] <= width / 2 + 255 and height / 2 + 430 <= mouse[1] <= height / 2 + 470
-            deathmatchButton = width / 2 - 80 <= mouse[0] <= width / 2 + 150 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
-            scoreButton = width / 2 + 200 <= mouse[0] <= width / 2 + 430 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
-
-            if deathmatchButton:
-                pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 80,height/2 + 320, 230, 90)) 
-            else: 
-                pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 80,height/2 + 320, 230, 90))
-            
-            if scoreButton:
-                pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 200,height/2 + 320, 230, 90))
-            else:
-                pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 200,height/2 + 320, 230, 90))
-
-            # Draws quit button as lit up if mouse is hovering, otherwise draws it normally.
-            if quitButton:
-                pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 95,height/2 + 430, 160, 40))
-            else: 
-                pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 95,height/2 + 430, 160, 40)) 
-            
-            screen.blit(quit, (center[0] + 160, center[1] + 440)) 
-            screen.blit(deathmatch, (center[0] - 55, center[1] + 350))
-            screen.blit(score, (center[0] + 245, center[1] + 350))
-            
-            pygame.display.flip()
-
-            matplotlib.pyplot.close(fig)
-            matplotlib.pyplot.close(fig2)
-
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-            if event.type == pygame.MOUSEBUTTONDOWN and quitButton:
-                pygame.quit()
-                exit()
-            if event.type == pygame.MOUSEBUTTONDOWN and scoreButton:
-                variable.value = 1
-                return variable
-            if event.type == pygame.MOUSEBUTTONDOWN and deathmatchButton:
-                variable.value = 2
-                return variable
+
+        if generation == numGens + 1:
+            break
 
         if generation <= numGens:
-            fitness = connection.recv()
+            fitness = conn1.recv()
             highest.append(max(fitness))
 
             with matplotlib.pyplot.style.context('ggplot'):
@@ -860,23 +954,23 @@ def trainScreen(connection, numGens, variable):
             if flick:
                 screen.fill(background_colour)
                 trainText = bigfont.render(trainingText[counter], True, color_light)
-                screen.blit(trainText, (center[0] + 50, center[1] - 245))
+                screen.blit(trainText, (center[0] + 50, center[1] - 350))
                 flick = False
 
             else:
                 screen.fill(background_colour)
                 trainText = bigfont.render(trainingText[counter], True, color_dark)
-                screen.blit(trainText, (center[0] + 50, center[1] - 245))
+                screen.blit(trainText, (center[0] + 50, center[1] - 350))
                 flick = True
 
             generationText = smallfont.render(f"Current generation: {generation}", True, color_dark)
-            screen.blit(generationText, (center[0] + 30, center[1] + 400))
+            screen.blit(generationText, (center[0] + 20, center[1] + 285))
 
             size = canvas.get_width_height()
             allGens = pygame.image.fromstring(raw_data2, size, "RGB")
-            screen.blit(allGens, (center[0] + 185, center[1] - 140))
+            screen.blit(allGens, (center[0] + 185, center[1] - 240))
             currentGen = pygame.image.fromstring(raw_data, size, "RGB")
-            screen.blit(currentGen, (center[0] - 435, center[1] - 140))
+            screen.blit(currentGen, (center[0] - 435, center[1] - 240))
             pygame.display.flip()
 
             matplotlib.pyplot.close(fig)
@@ -885,12 +979,92 @@ def trainScreen(connection, numGens, variable):
             counter += 1
             generation += 1
 
-    
+    finalGeneration = conn1.recv()
+    conn1.close()
+    conn2.close()
+
+    # Finished Training loop.
+    while True:
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+        if event.type == pygame.MOUSEBUTTONDOWN and quitButton:
+            pygame.quit()
+            exit()
+        if event.type == pygame.MOUSEBUTTONDOWN and viewAgentButton:
+            displayGame(lastMove, finalGeneration[0][1], Fruit(0,0))
+            screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
+        if event.type == pygame.MOUSEBUTTONDOWN and scoreButton:
+            return
+        if event.type == pygame.MOUSEBUTTONDOWN and deathmatchButton:
+            return
+        
+        screen.fill(background_colour)
+        trainText = bigfont.render("Training complete.", True, color_dark)
+        screen.blit(trainText, (center[0] - 60, center[1] - 350))
+
+        size = canvas.get_width_height()
+        allGens = pygame.image.fromstring(raw_data2, size, "RGB")
+        screen.blit(allGens, (center[0] + 185, center[1] - 250))
+        currentGen = pygame.image.fromstring(raw_data, size, "RGB")
+        screen.blit(currentGen, (center[0] - 435, center[1] - 250))
+
+        gamemode = smallfont.render("Please select a gamemode.", True, color_dark)
+        screen.blit(gamemode, (center[0] + 305, center[1] + 270))
+
+        view = smallfont.render("Would you like to see the agent?", True, color_dark)
+        screen.blit(view, (center[0] - 350, center[1] + 270))
+        
+        mouse = pygame.mouse.get_pos()
+
+        quit = smallerfont.render('quit' , True , color)
+        deathmatch = smallfont.render('deathmatch' , True , color)
+        score = smallfont.render('high score', True, color)
+        viewAgent = smallfont.render('view agent', True, color)
+
+        quitButton = width / 2 + 405 <= mouse[0] <= width / 2 + 565 and height / 2 + 430 <= mouse[1] <= height / 2 + 470
+        deathmatchButton = width / 2 + 240 <= mouse[0] <= width / 2 + 470 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
+        scoreButton = width / 2 + 500 <= mouse[0] <= width / 2 + 730 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
+        viewAgentButton = width / 2 - 250 <= mouse[0] <= width / 2 - 20 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
+
+        if deathmatchButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 240,height/2 + 320, 230, 90)) 
+        else: 
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 240,height/2 + 320, 230, 90))
+        
+        if scoreButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 500,height/2 + 320, 230, 90))
+        else:
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 500,height/2 + 320, 230, 90))
+
+        # Draws quit button as lit up if mouse is hovering, otherwise draws it normally.
+        if quitButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 405,height/2 + 430, 160, 40))
+        else: 
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 405,height/2 + 430, 160, 40)) 
+        
+        if viewAgentButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 250,height/2 + 320, 230, 90)) 
+        else:
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 250,height/2 + 320, 230, 90))
+        
+        screen.blit(quit, (center[0] + 470, center[1] + 440))
+        screen.blit(deathmatch, (center[0] + 265, center[1] + 350))
+        screen.blit(score, (center[0] + 545, center[1] + 350))
+        screen.blit(viewAgent, (center[0] - 215, center[1] + 350))
+        
+        pygame.display.flip()
+        matplotlib.pyplot.close(fig)
+        matplotlib.pyplot.close(fig2)
+
 
 # Grid size.
 blockSize = 20
 res = (900, 800)    
 amountOfChromosomes = 16321
+
 
 if __name__ == '__main__':
 
@@ -929,13 +1103,5 @@ if __name__ == '__main__':
 
     if gameState == 1:
         PlayerSnakeGame()
-
     elif gameState == 2:
-        results, gamemode = trainGen(0)
-        print("i returned")
-        print(gamemode)
-
-        # Display the 20 best agents.
-        # for i in range(20):
-        #     print("Fitness: {}".format(results[i][0]))
-        #     displayGame(Snake(random.randrange(20, 860, 20), random.randrange(20, 700, 20), []), "left", results[i][1], Fruit(0, 0))
+        AISnakeGame()
