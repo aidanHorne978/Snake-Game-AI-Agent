@@ -254,14 +254,12 @@ def PlayerSnakeGame(display):
         if display == 2:
 
             if switch == True:
-                title = smallerfont.render('Player.', True, (128,128,128))
+                screen.blit(pygame.image.load('images/player.png'), (center[0] - 50, center[1] + 370))
                 switch = False
             else:
-                title = smallerfont.render('Player.', True, (16,16,16))
+                screen.blit(pygame.image.load('images/player2.png'), (center[0] - 50, center[1] + 370))
                 switch = True
             
-            screen.blit(title, (center[0] - 50, center[1] + 370))
-
         # Score variable.
         scoreTitle = smallfont.render('score:' , True , BLACK)
         scoreValue = smallfont.render(str(score), True, BLACK)
@@ -288,7 +286,7 @@ def PlayerSnakeGame(display):
                         lastMove = "down"
 
         # This moves the snake at a certain time interval.
-        if clock.tick(6):
+        if clock.tick(12):
             MoveSnake(lastMove, snake, fruit, True)
             pygame.display.update()
 
@@ -498,14 +496,12 @@ def displayGame(lastMove, agent, fruit, display):
         elif display == 1:
 
             if switch == True:
-                title = smallerfont.render('AI agent.', True, (128,128,128))
+                screen.blit(pygame.image.load('images/agent.png'), (center[0] - 50, center[1] + 370))
                 switch = False
             else:
-                title = smallerfont.render('AI agent.', True, (16,16,16))
+                screen.blit(pygame.image.load('images/agent2.png'), (center[0] - 50, center[1] + 370))
                 switch = True
             
-            screen.blit(title, (center[0] - 50, center[1] + 370))
-
         # This is so the user can close the window anytime when displaying.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -521,7 +517,7 @@ def displayGame(lastMove, agent, fruit, display):
         screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
 
         # This moves the snake at a certain time interval.
-        if clock.tick(6):
+        if clock.tick(12):
 
             # Uses the trained agent to play the game with it's neural network. (Set to true for debugging).
             move = makeMove(agent, snake, lastMove, fruit, False)
@@ -820,7 +816,7 @@ def runAgent(agent):
 
 
         # Return the agent after training.
-        if steps == 1000:
+        if steps == 2500:
             return agent
             
         steps += 1
@@ -904,7 +900,7 @@ def gamemodeScore(agent):
 
     menu = True
 
-    while menu == True:
+    while menu:
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
@@ -920,11 +916,9 @@ def gamemodeScore(agent):
 
         back = smallfont.render('back' , True , color)
         ready = bigfont.render('ready' , True , color)
-        title = bigfont.render('Press ready to see the', True, color_dark)
-        title2 = bigfont.render(' Agent play.', True, color_dark)
 
         backButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
-        readyButton = width / 2 <= mouse[0] <= width / 2 + 260 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
+        readyButton = width / 2 - 140 <= mouse[0] <= width / 2 + 120 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
 
         if readyButton:
             pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 140,height/2 - 100, 260, 120))
@@ -939,8 +933,8 @@ def gamemodeScore(agent):
 
         screen.blit(ready, (center[0] - 85, center[1] - 75))
         screen.blit(back, (center[0] - 45, center[1] + 60))
-        screen.blit(title, (center[0] - 330, center[1] - 280))
-        screen.blit(title2, (center[0] - 180, center[1] - 205))
+        screen.blit(pygame.image.load('images/press-ready-to-see.png'), (center[0] - 330, center[1] - 350))
+        screen.blit(pygame.image.load('images/the-agent.png'), (center[0] - 180, center[1] - 245))
 
         pygame.display.flip()
     
@@ -969,10 +963,10 @@ def gamemodeScore(agent):
 
         back = smallfont.render('back' , True , color)
         ready = bigfont.render('ready' , True , color)
-        title = bigfont.render('Press ready to play', True, color_dark)
+        screen.blit(pygame.image.load('images/press-ready-to-play.png'), (center[0] - 330, center[1] - 300))
 
         backButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
-        readyButton = width / 2 <= mouse[0] <= width / 2 + 260 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
+        readyButton = width / 2 - 140 <= mouse[0] <= width / 2 + 120 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
 
         if readyButton:
             pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 140,height/2 - 100, 260, 120))
@@ -987,19 +981,30 @@ def gamemodeScore(agent):
 
         screen.blit(ready, (center[0] - 85, center[1] - 75))
         screen.blit(back, (center[0] - 45, center[1] + 60)) 
-        screen.blit(title, (center[0] - 270, center[1] - 210))
 
         pygame.display.update()
 
     playerScore = PlayerSnakeGame(2)
 
+    s = pygame.Surface(res)
+    s.fill(BLACK)
+    s.set_alpha(200)
+    screen.blit(s, (0,0))
+    pygame.display.flip()
+
+    if AIscore > playerScore:
+        screen.blit(pygame.image.load('images/agent-wins.png'), (center[0] - 330, center[1] - 300))
+    else:
+        screen.blit(pygame.image.load('images/player-wins.png'), (center[0] - 330, center[1] - 300))
+
 def AIMenu():
     
     # Fonts used.
-    screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
+    screen = pygame.display.set_mode(res)
     bigfont = pygame.font.SysFont('Corbel',70)
     smallfont = pygame.font.SysFont('Corbel',35)
     smallerfont = pygame.font.SysFont('Corbel', 20)
+    background_colour = pygame.Color("#8fcb9e")
     color = (255,255,255) 
     color_light = (128,128,128) 
     color_dark = (100,100,100)
@@ -1009,17 +1014,61 @@ def AIMenu():
     height = res[1]
     center = (int(width / 2), int(height / 2)) 
 
-    trainingText = ["Training.", "Training..", "Training..."]
-    counter = 0
+    img1 = pygame.image.load("images/training1.png")
+    img2 = pygame.image.load("images/training2.png")
+    img3 = pygame.image.load("images/training3.png")
 
-    # Creating the screen.
-    background_colour = pygame.Color("#8fcb9e")
-    pygame.display.set_caption('Snake Game')
+    trainingText = [img1, img2, img3]
+    counter = 0
+    numGens = 0
+    choice = True
+
     screen.fill(background_colour)
-    
-    trainText = bigfont.render(trainingText[0], True, color_dark)
-    screen.fill(background_colour)
-    screen.blit(trainText, (center[0] + 50, center[1] - 350))
+
+    while choice:
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and smallButton:
+                numGens = 50
+                choice = False
+            if event.type == pygame.MOUSEBUTTONDOWN and mediumButton:
+                numGens = 75
+                choice = False
+            if event.type == pygame.MOUSEBUTTONDOWN and largeButton:
+                numGens = 100
+                choice = False
+
+        screen.blit(pygame.image.load('images/logo.png'), (center[0] - 230, center[1] - 350))
+
+        mouse = pygame.mouse.get_pos()
+
+        smallButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
+        mediumButton = width / 2 - 290 <= mouse[0] <= width / 2 - 30 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
+        largeButton = width / 2 <= mouse[0] <= width / 2 + 260 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
+
+        if smallButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2,height/2 - 100, 260, 120))
+        else:
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2,height/2 - 100, 260, 120))
+
+        if mediumButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2,height/2 - 200, 260, 120))
+        else:
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2,height/2 - 200, 260, 120))
+
+        if largeButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2,height/2 - 300, 260, 120))
+        else:
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2,height/2 - 300, 260, 120))
+        
+        pygame.display.flip()
+
+    screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
+
+    screen.blit(pygame.image.load('images/loading3.png'), (center[0] - 30, center[1] - 70))
 
     flick = False
     pygame.display.flip()
@@ -1079,24 +1128,22 @@ def AIMenu():
 
             if flick:
                 screen.fill(background_colour)
-                trainText = bigfont.render(trainingText[counter], True, color_light)
-                screen.blit(trainText, (center[0] + 50, center[1] - 350))
+                screen.blit(trainingText[counter], (center[0] - 50, center[1] - 390))
                 flick = False
 
             else:
                 screen.fill(background_colour)
-                trainText = bigfont.render(trainingText[counter], True, color_dark)
-                screen.blit(trainText, (center[0] + 50, center[1] - 350))
+                screen.blit(trainingText[counter], (center[0] - 50, center[1] - 390))
                 flick = True
 
-            generationText = smallfont.render(f"Current generation: {generation}", True, color_dark)
-            screen.blit(generationText, (center[0] + 20, center[1] + 285))
-
+            screen.blit(pygame.image.load('images/current-generation.png'), (center[0] - 70, center[1] + 330))
+            generationCount = bigfont.render(str(generation), True, BLACK)
+            screen.blit(generationCount, (center[0] + 240, center[1] + 340))
             size = canvas.get_width_height()
             allGens = pygame.image.fromstring(raw_data2, size, "RGB")
-            screen.blit(allGens, (center[0] + 185, center[1] - 240))
+            screen.blit(allGens, (center[0] + 185, center[1] - 220))
             currentGen = pygame.image.fromstring(raw_data, size, "RGB")
-            screen.blit(currentGen, (center[0] - 435, center[1] - 240))
+            screen.blit(currentGen, (center[0] - 435, center[1] - 220))
             pygame.display.flip()
 
             matplotlib.pyplot.close('all')
@@ -1130,8 +1177,7 @@ def AIMenu():
                 return
         
         screen.fill(background_colour)
-        trainText = bigfont.render("Training complete.", True, color_dark)
-        screen.blit(trainText, (center[0] - 60, center[1] - 350))
+        screen.blit(pygame.image.load('images/training-complete.png'), (center[0] - 80, center[1] - 380))
 
         size = canvas.get_width_height()
         allGens = pygame.image.fromstring(raw_data2, size, "RGB")
@@ -1139,11 +1185,8 @@ def AIMenu():
         currentGen = pygame.image.fromstring(raw_data, size, "RGB")
         screen.blit(currentGen, (center[0] - 435, center[1] - 250))
 
-        gamemode = smallfont.render("Please select a gamemode.", True, color_dark)
-        screen.blit(gamemode, (center[0] + 305, center[1] + 270))
-
-        option = smallfont.render("Please select an option.", True, color_dark)
-        screen.blit(option, (center[0] - 300, center[1] + 270))
+        screen.blit(pygame.image.load('images/select-a-gamemode.png'), (center[0] + 305, center[1] + 255))
+        screen.blit(pygame.image.load('images/select-an-option.png'), (center[0] - 305, center[1] + 255))
         
         mouse = pygame.mouse.get_pos()
 
@@ -1195,12 +1238,10 @@ def AIMenu():
         matplotlib.pyplot.close(fig)
         matplotlib.pyplot.close(fig2)
 
-
 # Grid size.
 blockSize = 20
 res = (900, 800)    
 amountOfChromosomes = 16321
-
 
 if __name__ == '__main__':
 
