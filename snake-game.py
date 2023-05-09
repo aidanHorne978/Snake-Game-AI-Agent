@@ -996,6 +996,8 @@ def AISnakeGame():
         if event.type == pygame.MOUSEBUTTONDOWN and viewAgentButton:
             displayGame(lastMove, finalGeneration[0][1], Fruit(0,0))
             screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
+        if event.type == pygame.MOUSEBUTTONDOWN and retrainAgentButton:
+            return AISnakeGame()
         if event.type == pygame.MOUSEBUTTONDOWN and scoreButton:
             return
         if event.type == pygame.MOUSEBUTTONDOWN and deathmatchButton:
@@ -1014,8 +1016,8 @@ def AISnakeGame():
         gamemode = smallfont.render("Please select a gamemode.", True, color_dark)
         screen.blit(gamemode, (center[0] + 305, center[1] + 270))
 
-        view = smallfont.render("Would you like to see the agent?", True, color_dark)
-        screen.blit(view, (center[0] - 350, center[1] + 270))
+        option = smallfont.render("Please select an option.", True, color_dark)
+        screen.blit(option, (center[0] - 300, center[1] + 270))
         
         mouse = pygame.mouse.get_pos()
 
@@ -1023,11 +1025,13 @@ def AISnakeGame():
         deathmatch = smallfont.render('deathmatch' , True , color)
         score = smallfont.render('high score', True, color)
         viewAgent = smallfont.render('view agent', True, color)
+        retrain = smallfont.render('retrain', True, color)
 
-        quitButton = width / 2 + 405 <= mouse[0] <= width / 2 + 565 and height / 2 + 430 <= mouse[1] <= height / 2 + 470
         deathmatchButton = width / 2 + 240 <= mouse[0] <= width / 2 + 470 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
         scoreButton = width / 2 + 500 <= mouse[0] <= width / 2 + 730 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
-        viewAgentButton = width / 2 - 250 <= mouse[0] <= width / 2 - 20 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
+        viewAgentButton = width / 2 - 130 <= mouse[0] <= width / 2 + 100 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
+        retrainAgentButton = width / 2 - 390 <= mouse[0] <= width / 2 - 160 and height / 2 + 320 <= mouse[1] <= height / 2 + 410
+        quitButton = width / 2 + 90 <= mouse[0] <= width / 2 + 250 and height / 2 + 430 <= mouse[1] <= height / 2 + 470
 
         if deathmatchButton:
             pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 240,height/2 + 320, 230, 90)) 
@@ -1038,22 +1042,28 @@ def AISnakeGame():
             pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 500,height/2 + 320, 230, 90))
         else:
             pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 500,height/2 + 320, 230, 90))
+        
+        if viewAgentButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 130,height/2 + 320, 230, 90)) 
+        else:
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 130,height/2 + 320, 230, 90))
+        
+        if retrainAgentButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 390,height/2 + 320, 230, 90)) 
+        else:
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 390,height/2 + 320, 230, 90))
 
         # Draws quit button as lit up if mouse is hovering, otherwise draws it normally.
         if quitButton:
-            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 405,height/2 + 430, 160, 40))
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 + 90,height/2 + 430, 160, 40))
         else: 
-            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 405,height/2 + 430, 160, 40)) 
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 90,height/2 + 430, 160, 40)) 
         
-        if viewAgentButton:
-            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 250,height/2 + 320, 230, 90)) 
-        else:
-            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 250,height/2 + 320, 230, 90))
-        
-        screen.blit(quit, (center[0] + 470, center[1] + 440))
+        screen.blit(quit, (center[0] + 155, center[1] + 440))
         screen.blit(deathmatch, (center[0] + 265, center[1] + 350))
         screen.blit(score, (center[0] + 545, center[1] + 350))
-        screen.blit(viewAgent, (center[0] - 215, center[1] + 350))
+        screen.blit(viewAgent, (center[0] - 90, center[1] + 350))
+        screen.blit(retrain, (center[0] - 325, center[1] + 350))
         
         pygame.display.flip()
         matplotlib.pyplot.close(fig)
