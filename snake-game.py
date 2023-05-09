@@ -920,6 +920,8 @@ def gamemodeScore(agent):
 
         back = smallfont.render('back' , True , color)
         ready = bigfont.render('ready' , True , color)
+        title = bigfont.render('Press ready to see the', True, color_dark)
+        title2 = bigfont.render(' Agent play.', True, color_dark)
 
         backButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
         readyButton = width / 2 <= mouse[0] <= width / 2 + 260 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
@@ -936,7 +938,9 @@ def gamemodeScore(agent):
             pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60)) 
 
         screen.blit(ready, (center[0] - 85, center[1] - 75))
-        screen.blit(back, (center[0] - 45, center[1] + 60)) 
+        screen.blit(back, (center[0] - 45, center[1] + 60))
+        screen.blit(title, (center[0] - 330, center[1] - 280))
+        screen.blit(title2, (center[0] - 180, center[1] - 205))
 
         pygame.display.flip()
     
@@ -965,6 +969,7 @@ def gamemodeScore(agent):
 
         back = smallfont.render('back' , True , color)
         ready = bigfont.render('ready' , True , color)
+        title = bigfont.render('Press ready to play', True, color_dark)
 
         backButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
         readyButton = width / 2 <= mouse[0] <= width / 2 + 260 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
@@ -982,13 +987,11 @@ def gamemodeScore(agent):
 
         screen.blit(ready, (center[0] - 85, center[1] - 75))
         screen.blit(back, (center[0] - 45, center[1] + 60)) 
+        screen.blit(title, (center[0] - 270, center[1] - 210))
 
-        pygame.display.update() 
+        pygame.display.update()
 
     playerScore = PlayerSnakeGame(2)
-
-    print(playerScore)
-
 
 def AIMenu():
     
