@@ -89,6 +89,10 @@ def MainMenu():
     screen.fill(background_colour)
     pygame.display.flip()
 
+    smallerfont = pygame.font.SysFont('Corbel', 20)
+    smallfont = pygame.font.SysFont('Corbel',35)
+    bigfont = pygame.font.SysFont('Corbel',70)
+
     quit = smallfont.render('quit' , True , color)
     start = bigfont.render('start' , True , color)
     withAI = smallerfont.render('(with AI agent)', True, color)
@@ -107,7 +111,6 @@ def MainMenu():
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
                 return PlayerSnakeGame(0)
             if event.type == pygame.MOUSEBUTTONDOWN and startAIbutton:
-                pygame.display.quit()
                 return AIMenu()
 
         # To find where the mouse is at all times.
@@ -339,7 +342,7 @@ def GameOver():
     screen.blit(s, (0,0))
     pygame.display.flip()
 
-    quit = smallfont.render('quit' , True , color)
+    quit = smallfont.render('back' , True , color)
     start = bigfont.render('play again' , True , color)
 
     while True:
@@ -349,7 +352,7 @@ def GameOver():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-            if event.type == pygame.MOUSEBUTTONDOWN and quitButton:
+            if event.type == pygame.MOUSEBUTTONDOWN and backButton:
                 return MainMenu()
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
                 PlayerSnakeGame(0)
@@ -358,13 +361,13 @@ def GameOver():
         mouse = pygame.mouse.get_pos()
 
         # Coordinates of the quitButton for hit registering and drawing the quit button.
-        quitButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
+        backButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
 
         # Coordinates of the start button for hit registering and drawing the quit button.
         startButton = width / 2 - 190 <= mouse[0] <= width / 2 + 170 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
 
         # Draws quit button as lit up if mouse is hovering, otherwise draws it normally.
-        if quitButton:
+        if backButton:
             pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60)) 
         else: 
             pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60)) 
@@ -377,7 +380,7 @@ def GameOver():
 
 
         # Draws the "quit" and "start" text.
-        screen.blit(quit, (center[0] - 40, center[1] + 56))
+        screen.blit(quit, (center[0] - 45, center[1] + 60))
         screen.blit(start, (center[0] - 150, center[1] - 75))
         
         # Puts the "snake" logo onto the screen.
@@ -1001,9 +1004,13 @@ def AIMenu():
     
     # Fonts used.
     screen = pygame.display.set_mode(res)
+    pygame.display.set_caption('Snake Game')
+
     bigfont = pygame.font.SysFont('Corbel',70)
     smallfont = pygame.font.SysFont('Corbel',35)
     smallerfont = pygame.font.SysFont('Corbel', 20)
+    middlefont = pygame.font.SysFont('Corbel', 55)
+
     background_colour = pygame.Color("#8fcb9e")
     color = (255,255,255) 
     color_light = (128,128,128) 
@@ -1014,11 +1021,6 @@ def AIMenu():
     height = res[1]
     center = (int(width / 2), int(height / 2)) 
 
-    img1 = pygame.image.load("images/training1.png")
-    img2 = pygame.image.load("images/training2.png")
-    img3 = pygame.image.load("images/training3.png")
-
-    trainingText = [img1, img2, img3]
     counter = 0
     numGens = 0
     choice = True
@@ -1040,39 +1042,71 @@ def AIMenu():
             if event.type == pygame.MOUSEBUTTONDOWN and largeButton:
                 numGens = 100
                 choice = False
+            if event.type == pygame.MOUSEBUTTONDOWN and backButton:
+                return MainMenu()
 
         screen.blit(pygame.image.load('images/logo.png'), (center[0] - 230, center[1] - 350))
 
         mouse = pygame.mouse.get_pos()
 
-        smallButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
-        mediumButton = width / 2 - 290 <= mouse[0] <= width / 2 - 30 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
-        largeButton = width / 2 <= mouse[0] <= width / 2 + 260 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
+        smallButton = width / 2 - 240 <= mouse[0] <= width / 2 + 60 and height / 2 - 140 <= mouse[1] <= height / 2 - 20
+        mediumButton = width / 2 - 200 <= mouse[0] <= width / 2 + 60 and height / 2 - 10 <= mouse[1] <= height / 2 + 110
+        largeButton = width / 2 - 200 <= mouse[0] <= width / 2 + 60 and height / 2 + 120 <= mouse[1] <= height / 2 + 240
+        backButton = width / 2 - 160 <= mouse[0] <= width / 2 + 20 and height / 2 + 250 <= mouse[1] <= height / 2 + 310
 
         if smallButton:
-            pygame.draw.rect(screen,color_light,pygame.Rect(width/2,height/2 - 100, 260, 120))
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 200,height/2 - 140, 260, 120))
         else:
-            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2,height/2 - 100, 260, 120))
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 200,height/2 - 140, 260, 120))
 
         if mediumButton:
-            pygame.draw.rect(screen,color_light,pygame.Rect(width/2,height/2 - 200, 260, 120))
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 200,height/2 - 10, 260, 120))
         else:
-            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2,height/2 - 200, 260, 120))
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 200,height/2  - 10, 260, 120))
 
         if largeButton:
-            pygame.draw.rect(screen,color_light,pygame.Rect(width/2,height/2 - 300, 260, 120))
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 200,height/2 + 120, 260, 120))
         else:
-            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2,height/2 - 300, 260, 120))
-        
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 200,height/2 + 120, 260, 120))
+
+        if backButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 160,height/2 + 250, 180, 60))
+        else: 
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 160,height/2 + 250, 180, 60)) 
+
+        small = middlefont.render('small', True, color)
+        medium = middlefont.render('medium', True, color)
+        large = middlefont.render('large', True, color)
+        back = smallfont.render('back', True, color)
+        smallTime = smallerfont.render('Small: 5 - 6 minute train time.', True, BLACK)
+        mediumTime = smallerfont.render('Medium: 7 - 8 minute train time.', True, BLACK)
+        largeTime = smallerfont.render('Large: 10 - 11 minute train time.', True, BLACK)
+        disclaimer = smallerfont.render('Times are estimates from my machine (AMD Ryzen 7 3700X 8-Core Processor 3.60 GHz)', True, BLACK)
+
+        screen.blit(small, (center[0] - 130, center[1] - 105))
+        screen.blit(medium, (center[0] - 160, center[1] + 25))
+        screen.blit(large, (center[0] - 130, center[1] + 155))
+        screen.blit(back, (center[0] - 105, center[1] + 265))
+        screen.blit(smallTime, (center[0] + 80, center[1] - 90))
+        screen.blit(mediumTime, (center[0] + 80, center[1] + 40))
+        screen.blit(largeTime, (center[0] + 80, center[1] + 170))
+        screen.blit(disclaimer, (center[0] - 360, center[1] + 340))
+
+
         pygame.display.flip()
 
-    screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
+    img1 = pygame.image.load("images/training1.png")
+    img2 = pygame.image.load("images/training2.png")
+    img3 = pygame.image.load("images/training3.png")
 
+    trainingText = [img1, img2, img3]
+    screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
+    screen.fill(background_colour)
     screen.blit(pygame.image.load('images/loading3.png'), (center[0] - 30, center[1] - 70))
 
-    flick = False
     pygame.display.flip()
 
+    flick = False
     highest = []
     generation = 0
     numGens = 0
@@ -1245,11 +1279,15 @@ amountOfChromosomes = 16321
 
 if __name__ == '__main__':
 
-    # Initilizing
+    # # Initilizing
     pygame.init()
 
     # Screen resolution.
     screen = pygame.display.set_mode(res)
+
+    smallerfont = pygame.font.SysFont('Corbel', 20)
+    smallfont = pygame.font.SysFont('Corbel',35)
+    bigfont = pygame.font.SysFont('Corbel',70)
 
     # Colours used.
     BLACK = [0, 0, 0]
@@ -1258,11 +1296,6 @@ if __name__ == '__main__':
     color = (255,255,255) 
     color_light = (170,170,170) 
     color_dark = (100,100,100) 
-
-    # Fonts used.
-    smallerfont = pygame.font.SysFont('Corbel', 20)
-    smallfont = pygame.font.SysFont('Corbel',35)
-    bigfont = pygame.font.SysFont('Corbel',70)
 
     # Screen width, height and center
     width = res[0]
