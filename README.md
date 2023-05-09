@@ -1,5 +1,20 @@
 # Snake-Game-AI-Agent
 
+## 9th May 2023:
+
+### snake-game.py
+ - I've now integrated the genetic algorithm and player controls into one file which is now the main file.
+ - Sadly, I can't call an instance of AIAgentmultiprocessing.py because I can't share variables and return from one file to another since it's a whole different process and it becomes messy quick.
+ - Have implemented a menu system where you can always go back and forth between the two options in the inital menu. This is so it's a smooth program to run.
+ - Once the user has pressed "Start (with AI agent)" The code then creates another process for the training which is very computationally heavy. On the main process, it displays to the user information about the training process and once finished it allows the user to select from a range of options and gamemodes.
+ - Have also implemented graphing while the population is training. There are two graphs, one for the current generation's fitness and another for max fitness in each generation. These are displayed to the user while the population trains. Also shows the user the generation number but is a bit laggy because of the sheer amount of computations happening in the background.
+ - Training time is still 5 - 6 seconds with 2500 steps per generation and now has a variety of options to do after training is complete like:
+     - Retrain if the agent for any reason.
+     - View the agent playing the snake game.
+     - Go head to head in a normal game of snake competing for the highest score.
+     - --------------------------------------------------------- Not implemented yet ---------------------------------------------------------------
+         * Will have a deathmatch gamemode where you and the agent are both in the same game fighting to hit each other and get the highest score.
+
 ## 4th May 2023:
 
 Have recreated the game with the user controlls working and is in repository Snake-Game (https://github.com/aidanHorne978/Snake-Game).
@@ -7,7 +22,7 @@ Have recreated the game with the user controlls working and is in repository Sna
 ### AIAgentmultiprocessing.py
  - Run's the same AI agent as AIagent.py but uses multiprocessing to speed up the generations.
  - Currently, I'm using a desktop with a AMD Ryzen 7 3700X 8-Core Processor 3.60 GHz CPU and I am running 50 Agents in a generation that each do 2,500 steps before returning. I've divided the population into 10 groups  of 5 which takes between 5 - 6 seconds to train a generation.
- - Comparing the 5 - 6 seconds per generation to the 14 - 15 seconds it takes just using one process in AIagent.py, it is much more efficient and takes way less time (10 minutes instead of 25 minutes).
+ - Comparing the 5 - 6 seconds with 2500 steps per generation to the 14 - 15 seconds it takes just using one process in AIagent.py, it is much more efficient and takes way less time (10 minutes instead of 25 minutes).
  - In my previous version, I was dividing the population then training. In this version, I've kept the population together but divide them off to run the game and then bring them all back together when assessing fitness and doing the crossover / mutation functions.
  - **This is now the main file.**
 
