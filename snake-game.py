@@ -105,7 +105,7 @@ def MainMenu():
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
-                return PlayerSnakeGame()
+                return PlayerSnakeGame(0)
             if event.type == pygame.MOUSEBUTTONDOWN and startAIbutton:
                 pygame.display.quit()
                 return AIMenu()
@@ -220,7 +220,7 @@ def MoveSnake(direction, snake, fruit, draw):
     snake.body[0].x = snake.x
     snake.body[0].y = snake.y
 
-def PlayerSnakeGame():
+def PlayerSnakeGame(display):
 
     # Creating the screen.
     background_colour = pygame.Color("#8fcb9e")
@@ -247,8 +247,20 @@ def PlayerSnakeGame():
     
     score = 0
     lastMove = "left"
+    switch = True
 
     while True:
+
+        if display == 2:
+
+            if switch == True:
+                title = smallerfont.render('Player.', True, (128,128,128))
+                switch = False
+            else:
+                title = smallerfont.render('Player.', True, (16,16,16))
+                switch = True
+            
+            screen.blit(title, (center[0] - 50, center[1] + 370))
 
         # Score variable.
         scoreTitle = smallfont.render('score:' , True , BLACK)
@@ -284,13 +296,22 @@ def PlayerSnakeGame():
         if len(snake.body) > 2:
             for parts in snake.body[1:]:
                 if snake.x == parts.x and snake.y == parts.y:
-                    GameOver()
+                    if display != 2:
+                        GameOver()
+                    else:
+                        return score
 
         if snake.x < 20 or snake.x > 860:
-            GameOver()
+            if display != 2:
+                GameOver()
+            else:
+                return score
 
         if snake.y < 20 or snake.y > 700:
-            GameOver()
+            if display != 2:
+                GameOver()
+            else:
+                return score
 
         # When you get a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
@@ -333,7 +354,7 @@ def GameOver():
             if event.type == pygame.MOUSEBUTTONDOWN and quitButton:
                 return MainMenu()
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
-                PlayerSnakeGame()
+                PlayerSnakeGame(0)
 
         # To find where the mouse is at all times.
         mouse = pygame.mouse.get_pos()
@@ -432,6 +453,7 @@ def displayGame(lastMove, agent, fruit, display):
     screen.fill(background_colour)
     pygame.display.flip()
 
+    smallerfont = pygame.font.SysFont('Corbel', 20)
     smallfont = pygame.font.SysFont('Corbel',35)
     clock = pygame.time.Clock()
 
@@ -455,12 +477,13 @@ def displayGame(lastMove, agent, fruit, display):
     snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
     
     score = 0
+    switch = True
 
     while True:
 
-        if display:
+        mouse = pygame.mouse.get_pos()
 
-            mouse = pygame.mouse.get_pos()
+        if display == 0:
 
             back = smallerfont.render('back' , True , color)
             backButton = width / 2 + 260 <= mouse[0] <= width / 2 + 380 and height / 2 + 330 <= mouse[1] <= height / 2 + 360
@@ -471,6 +494,17 @@ def displayGame(lastMove, agent, fruit, display):
                 pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 + 260,height/2 + 335, 120, 30))
             
             screen.blit(back, (center[0] + 300, center[1] + 340))
+        
+        elif display == 1:
+
+            if switch == True:
+                title = smallerfont.render('AI agent.', True, (128,128,128))
+                switch = False
+            else:
+                title = smallerfont.render('AI agent.', True, (16,16,16))
+                switch = True
+            
+            screen.blit(title, (center[0] - 50, center[1] + 370))
 
         # This is so the user can close the window anytime when displaying.
         for event in pygame.event.get():
@@ -533,15 +567,15 @@ def displayGame(lastMove, agent, fruit, display):
         if len(snake.body) > 2:
             for parts in snake.body[1:]:
                 if snake.x == parts.x and snake.y == parts.y:
-                    return
+                    return score
 
         # If the snake hits a wall on the horizontal axis.
         if snake.x < 20 or snake.x > 860:
-            return
+            return score
 
         # If the snake hits a wall on the vertical axis.
         elif snake.y < 20 or snake.y > 700:
-            return
+            return score
 
 def sigmoid(x):
     
@@ -860,7 +894,6 @@ def gamemodeScore(agent):
     color_dark = (100,100,100) 
 
     # Fonts used.
-    smallerfont = pygame.font.SysFont('Corbel', 20)
     smallfont = pygame.font.SysFont('Corbel',35)
     bigfont = pygame.font.SysFont('Corbel',70)
 
@@ -907,7 +940,54 @@ def gamemodeScore(agent):
 
         pygame.display.flip()
     
-    displayGame("left", agent, Fruit(0, 0), False)
+    # Run the AI.
+    AIscore = displayGame("left", agent, Fruit(0, 0), 1)
+    menu = True
+
+    s = pygame.Surface(res)
+    s.fill(BLACK)
+    s.set_alpha(200)
+    screen.blit(s, (0,0))
+    pygame.display.flip()
+
+    while menu == True:
+        # Close screen if user clicks quit or the red arrow in the top right corner.
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and backButton:
+                return
+            if event.type == pygame.MOUSEBUTTONDOWN and readyButton:
+                menu = False
+
+        mouse = pygame.mouse.get_pos()
+
+        back = smallfont.render('back' , True , color)
+        ready = bigfont.render('ready' , True , color)
+
+        backButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
+        readyButton = width / 2 <= mouse[0] <= width / 2 + 260 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
+
+        if readyButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 140,height/2 - 100, 260, 120))
+        else:
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 140,height/2 - 100, 260, 120))
+
+        # Draws quit button as lit up if mouse is hovering, otherwise draws it normally.
+        if backButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60))
+        else: 
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60)) 
+
+        screen.blit(ready, (center[0] - 85, center[1] - 75))
+        screen.blit(back, (center[0] - 45, center[1] + 60)) 
+
+        pygame.display.update() 
+
+    playerScore = PlayerSnakeGame(2)
+
+    print(playerScore)
 
 
 def AIMenu():
@@ -1038,7 +1118,7 @@ def AIMenu():
             if event.type == pygame.MOUSEBUTTONDOWN and retrainAgentButton:
                 return AIMenu()
             if event.type == pygame.MOUSEBUTTONDOWN and viewAgentButton:
-                displayGame(lastMove, finalGeneration[0][1], Fruit(0,0), True)
+                displayGame(lastMove, finalGeneration[0][1], Fruit(0,0), 0)
                 screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
             if event.type == pygame.MOUSEBUTTONDOWN and scoreButton:
                 gamemodeScore(finalGeneration[0][1])
