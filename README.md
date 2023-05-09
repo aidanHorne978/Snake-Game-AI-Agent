@@ -50,3 +50,4 @@ Have recreated the game with the user controlls working and is in repository Sna
 Sites that helped:
  - https://davideliu.com/2020/02/03/teaching-ai-to-play-snake-with-genetic-algorithm/
  - https://www.sitepoint.com/python-multiprocessing-parallel-programming/
+ - https://www.fontspace.com/snake-holiday-font-f87373
