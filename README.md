@@ -1,5 +1,19 @@
 # Snake-Game-AI-Agent
 
+## 9th May 2023:
+
+## snake-game.py
+ - I've now integrated the genetic algorithm and player controls into one file which is now the main file.
+ - Sadly, I can't call an instance of AIAgentmultiprocessing.py because I can't share variables and return from one file to another since it's a whole different process and it becomes messy quick.
+ - Have implemented a menu system where you can always go back and forth between the two options in the inital menu. This is so it's a smooth program to run.
+ - Once the user has pressed "Start (with AI agent)" The code then creates another process for the training which is very computationally heavy. On the main process, it displays to the user information about the training process and once finished it allows the user to select from a range of options and gamemodes.
+ - Have also implemented graphing while the population is training. There are two graphs, one for the current generation's fitness and another for max fitness in each generation. These are displayed to the user while the population trains. Also shows the user the generation number but is a bit laggy because of the sheer amount of computations happening in the background.
+ - Training time is still 5 - 6 seconds and now has a variety of options to do after training is complete like:
+ * Retrain if the agent for any reason.
+ * View the agent playing the snake game.
+ * Go head to head in a normal game of snake competing for the highest score.
+ * --- Not implemented yet, but will have a deathmatch gamemode where you and the agent are both in the same game fighting to hit each other and get the highest score ---
+
 ## 4th May 2023:
 
 Have recreated the game with the user controlls working and is in repository Snake-Game (https://github.com/aidanHorne978/Snake-Game).
