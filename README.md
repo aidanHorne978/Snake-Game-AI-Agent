@@ -2,7 +2,7 @@
 
 ## 9th May 2023:
 
-## snake-game.py
+### snake-game.py
  - I've now integrated the genetic algorithm and player controls into one file which is now the main file.
  - Sadly, I can't call an instance of AIAgentmultiprocessing.py because I can't share variables and return from one file to another since it's a whole different process and it becomes messy quick.
  - Have implemented a menu system where you can always go back and forth between the two options in the inital menu. This is so it's a smooth program to run.
