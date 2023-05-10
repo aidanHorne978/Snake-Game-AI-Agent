@@ -105,6 +105,7 @@ def MainMenu():
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
                 return PlayerSnakeGame(0)
             if event.type == pygame.MOUSEBUTTONDOWN and startAIbutton:
+
                 return AIMenu()
 
         # To find where the mouse is at all times.
@@ -1246,17 +1247,17 @@ def gamemodeDeathmatch(agent):
                 if agentSnake.x == parts.x and agentSnake.y == parts.y:
                     game = False
 
+        if len(agentSnake.body) > 2:
+            for parts in playerSnake.body[1:]:
+                if agentSnake.x == parts.x and agentSnake.y == parts.y:
+                    agentScore = 0
+                    playerScore = 1
+                    game = False
+
         if agentSnake.x == playerSnake.x and agentSnake.y == playerSnake.y:
             agentScore = 0
             playerScore = 0
             game = False
-
-        if len(agentSnake.body) > 2:
-            for parts in playerSnake.body:
-                if playerSnake.x == parts.x and playerSnake.y == parts.y:
-                    agentScore = 0
-                    playerScore = 1
-                    game = False
 
         if agentSnake.x < 20 or agentSnake.x > 860:
             agentScore = 0
@@ -1275,7 +1276,7 @@ def gamemodeDeathmatch(agent):
                     game = False
         
         if len(playerSnake.body) > 2:
-            for parts in agentSnake.body:
+            for parts in agentSnake.body[1:]:
                 if playerSnake.x == parts.x and playerSnake.y == parts.y:
                     agentScore = 1
                     playerScore = 0
@@ -1435,6 +1436,7 @@ def AIMenu():
     p1 = Process(target = trainGen, args=(numGens, conn2,))
     p1.start()
 
+    start = timer.time()
     # Training loop
     while True:
 
@@ -1510,6 +1512,7 @@ def AIMenu():
     conn2.close()
     p1.join()
     p1.close()
+    end = timer.time()
 
     # Finished Training loop.
     while True:
@@ -1535,6 +1538,9 @@ def AIMenu():
         
         screen.fill(background_colour)
         screen.blit(pygame.image.load('images/training-complete.png'), (center[0] - 80, center[1] - 380))
+        screen.blit(pygame.image.load('images/time-elapsed.png'), (center[0] + 380, center[0] + 380))
+        totalTime = smallerfont.render(timer.strftime("%H:%M:%S.{}".format(str(end - start % 1)[2:])[:8], timer.gmtime(end - start)), True, BLACK)
+        screen.blit(totalTime, (center[0] + 530, center[1] + 450))
 
         size = canvas.get_width_height()
         allGens = pygame.image.fromstring(raw_data2, size, "RGB")
