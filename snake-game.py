@@ -442,7 +442,6 @@ def displayGame(lastMove, agent, fruit, display):
     # Creating the screen.
     global res
     global screen
-    temp = 0
     background_colour = pygame.Color("#8fcb9e")
     snake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
     res = (900, 800)
@@ -535,7 +534,7 @@ def displayGame(lastMove, agent, fruit, display):
                 if lastMove != "up":
                     lastMove = "down"
 
-            MoveSnake(temp, lastMove, snake, fruit, True)
+            MoveSnake(screen, lastMove, snake, fruit, True)
             pygame.display.update()
 
         # When the agent gets a fruit it will replace it with another randomly generated fruit.
