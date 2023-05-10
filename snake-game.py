@@ -6,6 +6,8 @@ import random
 import numpy as np
 import time as timer
 from multiprocessing import Pool, Process, Pipe
+from multiprocessing.pool import ThreadPool
+from threading import Thread
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.backends.backend_agg as agg
@@ -81,7 +83,6 @@ def MainMenu():
     screen = pygame.display.set_mode(res)
     pygame.display.set_caption('Snake Game')
     screen.fill(background_colour)
-    pygame.display.flip()
 
     smallerfont = pygame.font.SysFont('Corbel', 20)
     smallfont = pygame.font.SysFont('Corbel',35)
@@ -92,7 +93,11 @@ def MainMenu():
     withAI = smallerfont.render('(with AI agent)', True, color)
     withoutAI = smallerfont.render('(normal snake)', True, color)
 
-    while True:
+    screen.blit(pygame.image.load('images/logo.png').convert_alpha(), (center[0] - 230, center[1] - 350))
+
+    pygame.display.update()
+
+    while 1:
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
@@ -105,7 +110,6 @@ def MainMenu():
             if event.type == pygame.MOUSEBUTTONDOWN and startButton:
                 return PlayerSnakeGame(0)
             if event.type == pygame.MOUSEBUTTONDOWN and startAIbutton:
-
                 return AIMenu()
 
         # To find where the mouse is at all times.
@@ -118,7 +122,7 @@ def MainMenu():
 
         # Draws the start buttons as lit up if mouse is hovering, otherwise draws them normally.
         if startAIbutton:
-            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 290,height/2 - 100, 260, 120)) 
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 290,height/2 - 100, 260, 120))
         else: 
             pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 290,height/2 - 100, 260, 120))
         
@@ -129,14 +133,12 @@ def MainMenu():
 
         # Draws quit button as lit up if mouse is hovering, otherwise draws it normally.
         if quitButton:
-            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60)) 
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60))
         else: 
-            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60)) 
-
-
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60))
 
         # Draws the "quit" button.
-        screen.blit(quit, (center[0] - 40, center[1] + 56)) 
+        screen.blit(quit, (center[0] - 40, center[1] + 56))
 
         # Draws the start with AI button.
         screen.blit(start, (center[0] - 227, center[1] - 85))
@@ -145,13 +147,8 @@ def MainMenu():
         # Draws the normal start button.
         screen.blit(start, (center[0] + 65, center[1] - 85))
         screen.blit(withoutAI, (center[0] + 65, center[1] - 15))
-        
-        # Puts the "snake" logo onto the screen.
-        logo = pygame.image.load('images/logo.png')
-        screen.blit(logo, (center[0] - 230, center[1] - 350))
 
-        # updates the frames of the game 
-        pygame.display.update() 
+        pygame.display.update()
 
 def DrawGrid(screen):
 
@@ -223,7 +220,6 @@ def PlayerSnakeGame(display):
     screen = pygame.display.set_mode(res)
     pygame.display.set_caption('Snake Game')
     screen.fill(background_colour)
-    pygame.display.flip()
 
     # Drawing the grid.
     DrawGrid(screen)
@@ -249,11 +245,11 @@ def PlayerSnakeGame(display):
     s.fill(BLACK)
     s.set_alpha(200)
     screen.blit(s, (0,0))
-    pygame.display.flip()
+    screen.blit(pygame.image.load('images/press-any-key.png').convert_alpha(), (center[0] - 325, center[1] - 200))
+
+    pygame.display.update()
 
     while wait:
-
-        screen.blit(pygame.image.load('images/press-any-key.png'), (center[0] - 325, center[1] - 200))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -273,25 +269,24 @@ def PlayerSnakeGame(display):
 
                 wait = False
         
-        pygame.display.flip()
-
     background_colour = pygame.Color("#8fcb9e")
     screen = pygame.display.set_mode(res)
     pygame.display.set_caption('Snake Game')
     screen.fill(background_colour)
     fruit.drawFruit(screen)
     DrawGrid(screen)
-    pygame.display.flip()
 
-    while True:
+    pygame.display.update()
+
+    while 1:
 
         if display == 2:
 
             if switch == True:
-                screen.blit(pygame.image.load('images/player.png'), (center[0] - 50, center[1] + 370))
+                pygame.display.update(screen.blit(pygame.image.load('images/player.png').convert_alpha(), (center[0] - 50, center[1] + 370)))
                 switch = False
             else:
-                screen.blit(pygame.image.load('images/player2.png'), (center[0] - 50, center[1] + 370))
+                pygame.display.update(screen.blit(pygame.image.load('images/player2.png').convert_alpha(), (center[0] - 50, center[1] + 370)))
                 switch = True
 
         # Score variable.
@@ -322,7 +317,6 @@ def PlayerSnakeGame(display):
         # This moves the snake at a certain time interval.
         if clock.tick(12):
             MoveSnake(screen, lastMove, snake, fruit, True, BLACK)
-            pygame.display.update()
 
         # If the snake hit's itself.
         if len(snake.body) > 2:
@@ -362,21 +356,20 @@ def PlayerSnakeGame(display):
             scoreValue = smallfont.render(str(score), True, BLACK)
             screen.fill(background_colour, (center[0] + 15, center[1] + 330, 100, 100))
             screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
-        
-        pygame.display.update()
 
+        pygame.display.update()
+        
 def GameOverPSG(screen):
 
     s = pygame.Surface(res)
     s.fill(BLACK)
     s.set_alpha(200)
-    screen.blit(s, (0,0))
-    pygame.display.flip()
+    pygame.display.update(screen.blit(s, (0,0)))
 
     quit = smallfont.render('back' , True , color)
     start = bigfont.render('play again' , True , color)
 
-    while True:
+    while 1:
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
@@ -409,18 +402,16 @@ def GameOverPSG(screen):
         else: 
             pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 190,height/2 - 100, 360, 120)) 
 
-
         # Draws the "quit" and "start" text.
-        screen.blit(quit, (center[0] - 45, center[1] + 60))
-        screen.blit(start, (center[0] - 150, center[1] - 75))
+        pygame.display.update(screen.blit(quit, (center[0] - 45, center[1] + 60)))
+        pygame.display.update(screen.blit(start, (center[0] - 150, center[1] - 75)))
         
         # Puts the "snake" logo onto the screen.
-        logo = pygame.image.load('images/game-over.png')
-        screen.blit(logo, (center[0] - 230, center[1] - 350))
+        logo = pygame.image.load('images/game-over.png').convert_alpha()
+        pygame.display.update(screen.blit(logo, (center[0] - 230, center[1] - 350)))
 
         # updates the frames of the game 
-        pygame.display.update() 
-
+         
 def SnakeGame(agent, lastMove, fruit):
 
     scored = False
@@ -484,7 +475,6 @@ def displayGame(lastMove, agent, fruit, display):
     screen = pygame.display.set_mode(res)
     pygame.display.set_caption('Snake Game')
     screen.fill(background_colour)
-    pygame.display.flip()
 
     smallerfont = pygame.font.SysFont('Corbel', 20)
     smallfont = pygame.font.SysFont('Corbel',35)
@@ -508,7 +498,9 @@ def displayGame(lastMove, agent, fruit, display):
     score = 0
     switch = True
 
-    while True:
+    pygame.display.update()
+
+    while 1:
 
         mouse = pygame.mouse.get_pos()
 
@@ -527,10 +519,10 @@ def displayGame(lastMove, agent, fruit, display):
         elif display == 1:
 
             if switch == True:
-                screen.blit(pygame.image.load('images/agent.png'), (center[0] - 50, center[1] + 370))
+                screen.blit(pygame.image.load('images/agent.png').convert_alpha(), (center[0] - 50, center[1] + 370))
                 switch = False
             else:
-                screen.blit(pygame.image.load('images/agent2.png'), (center[0] - 50, center[1] + 370))
+                screen.blit(pygame.image.load('images/agent2.png').convert_alpha(), (center[0] - 50, center[1] + 370))
                 switch = True
             
         # This is so the user can close the window anytime when displaying.
@@ -552,7 +544,7 @@ def displayGame(lastMove, agent, fruit, display):
         if clock.tick(12):
 
             # Uses the trained agent to play the game with it's neural network. (Set to true for debugging).
-            move = makeMove(agent, snake, lastMove, fruit, False)
+            move = makeMove(agent, snake, lastMove, fruit)
 
             if move[0] == max(move):
                 if lastMove != "right":
@@ -568,7 +560,6 @@ def displayGame(lastMove, agent, fruit, display):
                     lastMove = "down"
 
             MoveSnake(screen, lastMove, snake, fruit, True, BLACK)
-            pygame.display.update()
 
         # When the agent gets a fruit it will replace it with another randomly generated fruit.
         # Then it will add one to the score and display it.
@@ -589,8 +580,6 @@ def displayGame(lastMove, agent, fruit, display):
             screen.fill(background_colour, (center[0] + 15, center[1] + 330, 100, 100))
             screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
         
-        pygame.display.update()
-
         # If the snake hit's itself.
         if len(snake.body) > 2:
             for parts in snake.body[1:]:
@@ -605,6 +594,8 @@ def displayGame(lastMove, agent, fruit, display):
         elif snake.y < 20 or snake.y > 700:
             return score
 
+        pygame.display.update()
+
 def sigmoid(x):
     
     # Activation function.
@@ -618,15 +609,7 @@ def make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_o
     output_layer = np.dot(layer2, layer2_to_output) + bias
     return output_layer
 
-def makeMove(agent, snake, lastMove, fruit, debug):
-
-    # --------------------------------- DEBUGGING ---------------------------------
-
-    # print("Snake x: {}\tSnake y: {}\tFruit x: {}\tFruit y: {}".format(snake.x, snake.y, fruit.x, fruit.y))
-
-    # --------------------------------- DEBUGGING ---------------------------------
-
-    ## Input nodes ##
+def makeMove(agent, snake, lastMove, fruit):
 
     # Orientation is Left, Right, Up, Down in the lists.
 
@@ -654,19 +637,6 @@ def makeMove(agent, snake, lastMove, fruit, debug):
     if snake.y == 700:
         wall[3] = 1
 
-    # Gives the relative position of the food like posFood. Index 0 will have -1 if food is left, else 0. Index 1 will have -1 if food is right, else 0.
-    # Index 2 will have -1 if food is up, else 0, Index 3 will have -1 if food is down, else 0.
-    # relativePos = [0, 0, 0, 0]
-    # if fruit.x < snake.x:
-    #     relativePos[0] = -1
-    # elif fruit.x > snake.x:
-    #     relativePos[1] = 1
-        
-    # if fruit.y < snake.y:
-    #     relativePos[2] = -1
-    # elif fruit.y > snake.y:
-    #     relativePos[3] = 1
-
     # Current direction the snake is moving aka lastMove variable.
     currdirection = [0, 0, 0, 0]
     if lastMove == "left":
@@ -686,33 +656,12 @@ def makeMove(agent, snake, lastMove, fruit, debug):
             input_vector = np.append(input_vector, posFood[i])
         input_vector = np.append(input_vector, wall[i])
         input_vector = np.append(input_vector, currdirection[i])
-        # input_vector = np.append(input_vector, relativePos[i])
-
 
     # Neural network's structure is an input layer (12 -> 120) values, hidden layer (120 -> 120) values and an output layer (120 -> 4) values.
     input_to_layer1 = agent.chromosome[0:1440].reshape(12, 120)
     input_to_layer1[:, 0] = input_vector
     layer1_to_layer2 = agent.chromosome[1441:15841].reshape(120, 120)
     layer2_to_output = agent.chromosome[15841:16321].reshape(120, 4)
-
-    # --------------------------------- DEBUGGING ---------------------------------
-    # 14 input nodes.
-    # input_to_layer1 = agent.chromosome[0:1680].reshape(14, 120)
-    # input_to_layer1[:, 0] = input_vector
-    # layer1_to_layer2 = agent.chromosome[1681:16081].reshape(120, 120)
-    # layer2_to_layer3 = agent.chromosome[16082:30482].reshape(120, 120)
-    # layer3_to_output = agent.chromosome[30483:30963].reshape(120, 4)
-
-    # 16 input nodes
-    # input_to_layer1 = agent.chromosome[0:1920].reshape(16, 120)
-    # input_to_layer1[:, 0] = input_vector
-    # layer1_to_layer2 = agent.chromosome[1921:16321].reshape(120, 120)
-    # layer2_to_output = agent.chromosome[16321:16801].reshape(120, 4)
-
-    if debug:
-        return move, [wall, currdirection, posFood]
-
-    # --------------------------------- DEBUGGING ---------------------------------
 
     # Return's a numpy array of 4 numbers with the highest being the best move.
     move = make_prediction(input_vector, input_to_layer1, layer1_to_layer2, layer2_to_output, 0)
@@ -769,7 +718,7 @@ def mutation(population, size):
     
     return population
 
-def runAgent(agent):
+def runAgentSmall(agent):
 
     # Initlizing variables needed for each individual agent.
     steps = 0
@@ -790,7 +739,7 @@ def runAgent(agent):
         return newSnake
 
     # Train the agent for n number of steps.
-    while True:
+    while 1:
 
         # If the snake dies it then gets reset
         if aiSnake.x < 20 or aiSnake.x > 860:
@@ -801,7 +750,7 @@ def runAgent(agent):
             penalty = True
 
         # Runs the neural network to decide which direction to move.
-        move = makeMove(agent, aiSnake, lastMove, fruit, False)
+        move = makeMove(agent, aiSnake, lastMove, fruit)
 
         # The highest value is the move the neural network thinks is the best.
         if move[0] == max(move):
@@ -846,6 +795,88 @@ def runAgent(agent):
             agent.deaths += 1
             first = True
 
+        # Return the agent after training.
+        if steps == 1000:
+            return agent
+            
+        steps += 1
+
+def runAgentMedium(agent):
+
+    # Initlizing variables needed for each individual agent.
+    steps = 0
+    firstFruit = 0
+    first = True
+    lastMove = "left"
+    penalty = True
+
+    fruit = Fruit(0, 0)
+    aiSnake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
+    fruit.generateFruit()
+
+    # Creates a new snake in a random position with a new fruit aswell to promote dynamic behaviour.
+    def respawn():
+        newSnake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
+        fruit = Fruit(0, 0)
+        fruit.generateFruit()
+        return newSnake
+
+    # Train the agent for n number of steps.
+    while 1:
+
+        # If the snake dies it then gets reset
+        if aiSnake.x < 20 or aiSnake.x > 860:
+            aiSnake = respawn()
+            penalty = True
+        elif aiSnake.y < 20 or aiSnake.y > 700:
+            aiSnake = respawn()
+            penalty = True
+
+        # Runs the neural network to decide which direction to move.
+        move = makeMove(agent, aiSnake, lastMove, fruit)
+
+        # The highest value is the move the neural network thinks is the best.
+        if move[0] == max(move):
+            if lastMove != "right":
+                lastMove = "left"
+        elif move[1] == max(move):
+            if lastMove != "left":
+                lastMove = "right"
+        elif move[2] == max(move):
+            if lastMove != "down":
+                lastMove = "up"
+        elif move[3] == max(move):
+            if lastMove != "up":
+                lastMove = "down"
+
+        # Run's the code for the snake game.
+        evaluation = SnakeGame(aiSnake, lastMove, fruit)
+
+        # To counter-act spinning by killing the snake if it spins and spawning in a new one.
+        if steps % 200 == 0 and steps != 0 and penalty == True:
+            if penalty == True:
+                agent.penalties += 1
+            agent.deaths += 1
+            aiSnake = respawn()
+            penalty = True
+
+        # If the snake gets a fruit then we start counting steps.
+        if evaluation[1]:
+            if first:
+                firstFruit = steps
+                first = False
+            fruit = Fruit(0, 0)
+            fruit.generateFruit()
+            agent.avg_steps.append(steps - firstFruit)
+            firstFruit = steps
+            penalty = False
+
+        # Keeps track of deaths.
+        if evaluation[2] == False:
+            if evaluation[0] > agent.hScore:
+                agent.hScore = evaluation[0]
+            agent.deaths += 1
+            first = True
 
         # Return the agent after training.
         if steps == 2500:
@@ -853,12 +884,96 @@ def runAgent(agent):
             
         steps += 1
 
-def trainGen(numGens, connection):
+def runAgentLarge(agent):
+
+    # Initlizing variables needed for each individual agent.
+    steps = 0
+    firstFruit = 0
+    first = True
+    lastMove = "left"
+    penalty = True
+
+    fruit = Fruit(0, 0)
+    aiSnake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
+    fruit.generateFruit()
+
+    # Creates a new snake in a random position with a new fruit aswell to promote dynamic behaviour.
+    def respawn():
+        newSnake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
+        fruit = Fruit(0, 0)
+        fruit.generateFruit()
+        return newSnake
+
+    # Train the agent for n number of steps.
+    while 1:
+
+        # If the snake dies it then gets reset
+        if aiSnake.x < 20 or aiSnake.x > 860:
+            aiSnake = respawn()
+            penalty = True
+        elif aiSnake.y < 20 or aiSnake.y > 700:
+            aiSnake = respawn()
+            penalty = True
+
+        # Runs the neural network to decide which direction to move.
+        move = makeMove(agent, aiSnake, lastMove, fruit)
+
+        # The highest value is the move the neural network thinks is the best.
+        if move[0] == max(move):
+            if lastMove != "right":
+                lastMove = "left"
+        elif move[1] == max(move):
+            if lastMove != "left":
+                lastMove = "right"
+        elif move[2] == max(move):
+            if lastMove != "down":
+                lastMove = "up"
+        elif move[3] == max(move):
+            if lastMove != "up":
+                lastMove = "down"
+
+        # Run's the code for the snake game.
+        evaluation = SnakeGame(aiSnake, lastMove, fruit)
+
+        # To counter-act spinning by killing the snake if it spins and spawning in a new one.
+        if steps % 200 == 0 and steps != 0 and penalty == True:
+            if penalty == True:
+                agent.penalties += 1
+            agent.deaths += 1
+            aiSnake = respawn()
+            penalty = True
+
+        # If the snake gets a fruit then we start counting steps.
+        if evaluation[1]:
+            if first:
+                firstFruit = steps
+                first = False
+            fruit = Fruit(0, 0)
+            fruit.generateFruit()
+            agent.avg_steps.append(steps - firstFruit)
+            firstFruit = steps
+            penalty = False
+
+        # Keeps track of deaths.
+        if evaluation[2] == False:
+            if evaluation[0] > agent.hScore:
+                agent.hScore = evaluation[0]
+            agent.deaths += 1
+            first = True
+
+        # Return the agent after training.
+        if steps == 5000:
+            return agent
+            
+        steps += 1
+
+def trainGen(connection, steps):
+
+    # 15 groups of 2 is best atm with 15 processes.
 
     generation = 0
-    group = 4
-    size = group * 10
-    global finalGeneration
+    group = 2
+    size = group * 20
 
     # Creating a population of agents.
     population = []
@@ -867,18 +982,22 @@ def trainGen(numGens, connection):
         population[i].createPopulation()
 
     # Train the n number of agents for x number of generations.
-    while True:
+    while 1:
 
         newGeneration = []
         
         # Running the game for every agent in the generation. Run's the agents in size of group with 10 processes.
-        sublists = [population[i:i+group] for i in range(0, len(population), group)]
         newPop = []
-        with Pool(20) as pool:
-            for sublist in sublists:
-                result = pool.map_async(runAgent, sublist)
-                for result in result.get():
-                    newPop.append(result)
+        print(steps)
+        with Pool() as pool:
+            if steps == "small":
+                result = pool.map_async(runAgentSmall, population)
+            elif steps == "medium":
+                result = pool.map_async(runAgentMedium, population)
+            else:
+                result = pool.map_async(runAgentLarge, population)
+            for result in result.get():
+                newPop.append(result)
         population = newPop
 
         # Finding the fitness for the generation and sorting by score to find best agents.
@@ -891,6 +1010,9 @@ def trainGen(numGens, connection):
         connection.send(cFitness)
         currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
 
+        if generation > 75 / 2:
+            population = population[0:30]
+
         # # Adding the best 12 agents to the next generation for crossover and mutation.
         for i in range(12):
             newGeneration.append(currentFitness[i][1])
@@ -899,7 +1021,7 @@ def trainGen(numGens, connection):
         population = mutation(population, size)
     
         # # How many generations it's going to train for.
-        if generation == numGens:
+        if generation == 75:
             connection.send(currentFitness)
             return 
     
@@ -912,10 +1034,9 @@ def gamemodeGameOver(screen, mode, AIscore, playerScore, agent):
     s = pygame.Surface(res)
     s.fill(BLACK)
     s.set_alpha(200)
-    screen.blit(s, (0,0))
-    pygame.display.flip()
+    pygame.display.update(screen.blit(s, (0,0)))
 
-    while True:
+    while 1:
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -930,11 +1051,12 @@ def gamemodeGameOver(screen, mode, AIscore, playerScore, agent):
                 return 
 
         if AIscore > playerScore:
-            screen.blit(pygame.image.load('images/agent-wins.png'), (center[0] - 300, center[1] - 270))
+            screen.blit(pygame.image.load('images/agent-wins.png').convert_alpha(), (center[0] - 300, center[1] - 270))
         elif playerScore > AIscore:
-            screen.blit(pygame.image.load('images/player-wins.png'), (center[0] - 300, center[1] - 270))
+            screen.blit(pygame.image.load('images/player-wins.png').convert_alpha(), (center[0] - 300, center[1] - 270))
         else:
-            screen.blit(pygame.image.load('images/draw.png'), (center[0] - 220, center[1] - 300))
+            screen.blit(pygame.image.load('images/draw.png').convert_alpha(), (center[0] - 220, center[1] - 300))
+
         mouse = pygame.mouse.get_pos()
 
         playAgain = middlefont.render('play again', True, color)
@@ -954,9 +1076,9 @@ def gamemodeGameOver(screen, mode, AIscore, playerScore, agent):
             pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 102,height/2 + 80, 180, 60)) 
 
         screen.blit(playAgain, (center[0] - 120, center[1] - 35))
-        screen.blit(back, (center[0] - 45, center[1] + 95)) 
+        screen.blit(back, (center[0] - 45, center[1] + 95))
 
-        pygame.display.flip()
+        pygame.display.update()
 
 def gamemodeScore(agent):
 
@@ -968,8 +1090,6 @@ def gamemodeScore(agent):
 
     # Colours used.
     BLACK = [0, 0, 0]
-    RED = [255, 0, 0]
-    GRASS = ("#7EC984")
     color = (255,255,255) 
     color_light = (170,170,170) 
     color_dark = (100,100,100) 
@@ -977,7 +1097,6 @@ def gamemodeScore(agent):
     # Fonts used.
     smallfont = pygame.font.SysFont('Corbel',35)
     bigfont = pygame.font.SysFont('Corbel',70)
-    middlefont = pygame.font.SysFont('Corbel', 55)
 
     # Screen width, height and center
     width = res[0]
@@ -1019,10 +1138,10 @@ def gamemodeScore(agent):
 
         screen.blit(ready, (center[0] - 85, center[1] - 75))
         screen.blit(back, (center[0] - 45, center[1] + 60))
-        screen.blit(pygame.image.load('images/press-ready-to-see.png'), (center[0] - 330, center[1] - 350))
-        screen.blit(pygame.image.load('images/the-agent.png'), (center[0] - 180, center[1] - 245))
+        screen.blit(pygame.image.load('images/press-ready-to-see.png').convert_alpha(), (center[0] - 330, center[1] - 350))
+        screen.blit(pygame.image.load('images/the-agent.png').convert_alpha(), (center[0] - 180, center[1] - 245))
 
-        pygame.display.flip()
+        pygame.display.update()
     
     # Run the AI.
     AIscore = displayGame("left", agent, Fruit(0, 0), 1)
@@ -1031,8 +1150,7 @@ def gamemodeScore(agent):
     s = pygame.Surface(res)
     s.fill(BLACK)
     s.set_alpha(200)
-    screen.blit(s, (0,0))
-    pygame.display.flip()
+    pygame.display.update(screen.blit(s, (0,0)))
 
     while menu == True:
         # Close screen if user clicks quit or the red arrow in the top right corner.
@@ -1049,7 +1167,7 @@ def gamemodeScore(agent):
 
         back = smallfont.render('back' , True , color)
         ready = bigfont.render('ready' , True , color)
-        screen.blit(pygame.image.load('images/press-ready-to-play.png'), (center[0] - 330, center[1] - 300))
+        pygame.display.update(screen.blit(pygame.image.load('images/press-ready-to-play.png').convert_alpha(), (center[0] - 330, center[1] - 300)))
 
         backButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 42 <= mouse[1] <= height / 2 + 102
         readyButton = width / 2 - 140 <= mouse[0] <= width / 2 + 120 and height / 2 - 100 <= mouse[1] <= height / 2 + 20
@@ -1066,7 +1184,7 @@ def gamemodeScore(agent):
             pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 102,height/2 + 45, 180, 60)) 
 
         screen.blit(ready, (center[0] - 85, center[1] - 75))
-        screen.blit(back, (center[0] - 45, center[1] + 60)) 
+        screen.blit(back, (center[0] - 45, center[1] + 60))
 
         pygame.display.update()
 
@@ -1082,20 +1200,13 @@ def gamemodeDeathmatch(agent):
     pygame.display.set_caption('Snake Game')
     screen.fill(background_colour)
     DrawGrid(screen)
-    pygame.display.flip()
-
+    
     # Colours used.
     BLACK = [0, 0, 0]
-    RED = [255, 0, 0]
-    GRASS = ("#7EC984")
-    color = (255,255,255) 
-    color_light = (170,170,170) 
     color_dark = (100,100,100) 
 
     # Fonts used.
-    smallfont = pygame.font.SysFont('Corbel',35)
     bigfont = pygame.font.SysFont('Corbel',70)
-    middlefont = pygame.font.SysFont('Corbel', 55)
 
     # Screen width, height and center
     width = res[0]
@@ -1113,8 +1224,10 @@ def gamemodeDeathmatch(agent):
     s = pygame.Surface(res)
     s.fill(BLACK)
     s.set_alpha(200)
+    pygame.display.update(screen.blit(pygame.image.load('images/press-any-key.png').convert_alpha(), (center[0] - 325, center[1] - 200)))
     screen.blit(s, (0,0))
-    pygame.display.flip()
+
+    pygame.display.update()
 
     wait = True
 
@@ -1142,8 +1255,6 @@ def gamemodeDeathmatch(agent):
 
     while wait:
 
-        screen.blit(pygame.image.load('images/press-any-key.png'), (center[0] - 325, center[1] - 200))
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -1162,17 +1273,14 @@ def gamemodeDeathmatch(agent):
 
                 wait = False
         
-        pygame.display.flip()
-
     background_colour = pygame.Color("#8fcb9e")
     screen = pygame.display.set_mode(res)
     pygame.display.set_caption('Snake Game')
     screen.fill(background_colour)
     DrawGrid(screen)
-    pygame.display.flip()
+    pygame.display.update()
 
     switch = True
-
     game = True
 
     while game:
@@ -1198,16 +1306,16 @@ def gamemodeDeathmatch(agent):
 
 
         if switch:
-            screen.blit(pygame.image.load('images/player-colon2.png'), (center[0] - 200, center[1] + 330))
-            screen.blit(pygame.image.load('images/agent-colon2.png'), (center[0] + 75, center[1] + 330))
+            screen.blit(pygame.image.load('images/player-colon2.png').convert_alpha(), (center[0] - 200, center[1] + 330))
+            screen.blit(pygame.image.load('images/agent-colon2.png').convert_alpha(), (center[0] + 75, center[1] + 330))
             screen.fill(background_colour, (center[0] - 75, center[1] + 330, 100, 100))
             screen.fill(background_colour, (center[0] + 225, center[1] + 330, 100, 100))
             agentScoreTitle = bigfont.render(str(agentScore), True, BLACK)
             playerScoreTitle = bigfont.render(str(playerScore), True, BLACK)
             switch = False
         else:
-            screen.blit(pygame.image.load('images/player-colon.png'), (center[0] - 200, center[1] + 330))
-            screen.blit(pygame.image.load('images/agent-colon.png'), (center[0] + 75, center[1] + 330))
+            screen.blit(pygame.image.load('images/player-colon.png').convert_alpha(), (center[0] - 200, center[1] + 330))
+            screen.blit(pygame.image.load('images/agent-colon.png').convert_alpha(), (center[0] + 75, center[1] + 330))
             screen.fill(background_colour, (center[0] - 75, center[1] + 330, 100, 100))
             screen.fill(background_colour, (center[0] + 225, center[1] + 330, 100, 100))
             agentScoreTitle = bigfont.render(str(agentScore), True, color_dark)
@@ -1216,13 +1324,12 @@ def gamemodeDeathmatch(agent):
             switch = True
 
         screen.blit(playerScoreTitle, (center[0] - 75, center[1] + 330))
-        screen.blit(agentScoreTitle, (center[0] + 225, center[1] + 325))
-        
+        screen.blit(agentScoreTitle, (center[0] + 225, center[1] + 325))        
 
         # This moves the snake at a certain time interval.
         if clock.tick(12):
 
-            move = makeMove(agent, agentSnake, agentLastMove, fruit, False)
+            move = makeMove(agent, agentSnake, agentLastMove, fruit)
 
             if move[0] == max(move):
                 if agentLastMove != "right":
@@ -1239,7 +1346,7 @@ def gamemodeDeathmatch(agent):
 
             MoveSnake(screen, agentLastMove, agentSnake, fruit, True, color_dark)
             MoveSnake(screen, playerLastMove, playerSnake, fruit, True, BLACK)
-            pygame.display.update()
+            
 
         # If the snake hit's itself.
         if len(agentSnake.body) > 2:
@@ -1318,7 +1425,8 @@ def gamemodeDeathmatch(agent):
             # Increase score by one.
             agentScore += 1
         
-    pygame.display.update()
+        pygame.display.update()
+
 
     gamemodeGameOver(screen, "dm", agentScore, playerScore, agent)
 
@@ -1344,10 +1452,13 @@ def AIMenu():
     center = (int(width / 2), int(height / 2)) 
 
     counter = 0
-    numGens = 0
     choice = True
 
+    global numSteps
+
     screen.fill(background_colour)
+    pygame.display.update(screen.blit(pygame.image.load('images/logo.png').convert_alpha(), (center[0] - 230, center[1] - 350)))
+    pygame.display.flip()
 
     while choice:
 
@@ -1356,19 +1467,17 @@ def AIMenu():
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN and smallButton:
-                numGens = 50
+                numSteps = "small"
                 choice = False
             if event.type == pygame.MOUSEBUTTONDOWN and mediumButton:
-                numGens = 75
+                numSteps = "medium"
                 choice = False
             if event.type == pygame.MOUSEBUTTONDOWN and largeButton:
-                numGens = 100
+                numSteps = "large"
                 choice = False
             if event.type == pygame.MOUSEBUTTONDOWN and backButton:
                 return MainMenu()
-
-        screen.blit(pygame.image.load('images/logo.png'), (center[0] - 230, center[1] - 350))
-
+            
         mouse = pygame.mouse.get_pos()
 
         smallButton = width / 2 - 240 <= mouse[0] <= width / 2 + 60 and height / 2 - 140 <= mouse[1] <= height / 2 - 20
@@ -1418,27 +1527,27 @@ def AIMenu():
 
     pygame.display.quit()
     screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
-    img1 = pygame.image.load("images/training1.png")
-    img2 = pygame.image.load("images/training2.png")
-    img3 = pygame.image.load("images/training3.png")
+    img1 = pygame.image.load("images/training1.png").convert_alpha()
+    img2 = pygame.image.load("images/training2.png").convert_alpha()
+    img3 = pygame.image.load("images/training3.png").convert_alpha()
 
     trainingText = [img1, img2, img3]
     screen.fill(background_colour)
-    screen.blit(pygame.image.load('images/loading3.png'), (center[0] - 30, center[1] - 70))
+    screen.blit(pygame.image.load('images/loading3.png').convert_alpha(), (center[0] - 30, center[1] - 70))
 
-    pygame.display.flip()
+    pygame.display.update()
 
     flick = False
     highest = []
     generation = 0
 
     conn1, conn2  = Pipe(duplex = False)
-    p1 = Process(target = trainGen, args=(numGens, conn2,))
+    p1 = Process(target = trainGen, args=(conn2, numSteps,))
     p1.start()
 
     start = timer.time()
     # Training loop
-    while True:
+    while 1:
 
         # Close screen if user clicks quit or the red arrow in the top right corner.
         for event in pygame.event.get():
@@ -1446,10 +1555,10 @@ def AIMenu():
                 pygame.quit()
                 exit()
 
-        if generation == numGens + 1:
+        if generation == 76:
             break
 
-        if generation <= numGens:
+        if generation <= 75:
             fitness = conn1.recv()
             highest.append(max(fitness))
 
@@ -1492,7 +1601,7 @@ def AIMenu():
                 screen.blit(trainingText[counter], (center[0] - 50, center[1] - 390))
                 flick = True
 
-            screen.blit(pygame.image.load('images/current-generation.png'), (center[0] - 70, center[1] + 330))
+            screen.blit(pygame.image.load('images/current-generation.png').convert_alpha(), (center[0] - 70, center[1] + 330))
             generationCount = bigfont.render(str(generation), True, BLACK)
             screen.blit(generationCount, (center[0] + 240, center[1] + 340))
             size = canvas.get_width_height()
@@ -1500,9 +1609,10 @@ def AIMenu():
             screen.blit(allGens, (center[0] + 185, center[1] - 220))
             currentGen = pygame.image.fromstring(raw_data, size, "RGB")
             screen.blit(currentGen, (center[0] - 435, center[1] - 220))
-            pygame.display.flip()
+            
 
             matplotlib.pyplot.close('all')
+            pygame.display.update()
 
             counter += 1
             generation += 1
@@ -1515,7 +1625,7 @@ def AIMenu():
     end = timer.time()
 
     # Finished Training loop.
-    while True:
+    while 1:
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1537,8 +1647,8 @@ def AIMenu():
                 screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
         
         screen.fill(background_colour)
-        screen.blit(pygame.image.load('images/training-complete.png'), (center[0] - 80, center[1] - 380))
-        screen.blit(pygame.image.load('images/time-elapsed.png'), (center[0] + 380, center[0] + 380))
+        screen.blit(pygame.image.load('images/training-complete.png').convert_alpha(), (center[0] - 80, center[1] - 380))
+        screen.blit(pygame.image.load('images/time-elapsed.png').convert_alpha(), (center[0] + 380, center[0] + 380))
         totalTime = smallerfont.render(timer.strftime("%H:%M:%S.{}".format(str(end - start % 1)[2:])[:8], timer.gmtime(end - start)), True, BLACK)
         screen.blit(totalTime, (center[0] + 530, center[1] + 450))
 
@@ -1548,8 +1658,8 @@ def AIMenu():
         currentGen = pygame.image.fromstring(raw_data, size, "RGB")
         screen.blit(currentGen, (center[0] - 435, center[1] - 250))
 
-        screen.blit(pygame.image.load('images/select-a-gamemode.png'), (center[0] + 305, center[1] + 255))
-        screen.blit(pygame.image.load('images/select-an-option.png'), (center[0] - 305, center[1] + 255))
+        screen.blit(pygame.image.load('images/select-a-gamemode.png').convert_alpha(), (center[0] + 305, center[1] + 255))
+        screen.blit(pygame.image.load('images/select-an-option.png').convert_alpha(), (center[0] - 305, center[1] + 255))
         
         mouse = pygame.mouse.get_pos()
 
@@ -1597,9 +1707,9 @@ def AIMenu():
         screen.blit(viewAgent, (center[0] - 90, center[1] + 350))
         screen.blit(retrain, (center[0] - 325, center[1] + 350))
         
-        pygame.display.flip()
-        matplotlib.pyplot.close(fig)
-        matplotlib.pyplot.close(fig2)
+        
+        matplotlib.pyplot.close('all')
+        pygame.display.update()
 
 # Grid size.
 blockSize = 20
