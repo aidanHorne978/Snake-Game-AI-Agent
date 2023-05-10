@@ -5,13 +5,11 @@ import pygame
 import random
 import numpy as np
 import time as timer
-from multiprocessing import Pool, Process, Pipe, Queue
-from multiprocessing.managers import BaseManager
+from multiprocessing import Pool, Process, Pipe
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.backends.backend_agg as agg
 import pylab
-from matplotlib import style
 
 # Snake class
 class Snake:
@@ -45,7 +43,7 @@ class Fruit:
         return self.x, self.y
 
     # Draw's the fruit on the grid.
-    def drawFruit(self):
+    def drawFruit(self, screen):
         rect = pygame.Rect(self.x, self.y, blockSize, blockSize)
         return pygame.draw.rect(screen, RED, rect)
 
@@ -155,7 +153,6 @@ def MainMenu():
         logo = pygame.image.load('images/logo.png')
         screen.blit(logo, (center[0] - 230, center[1] - 350))
 
-
         # updates the frames of the game 
         pygame.display.update() 
 
@@ -182,10 +179,10 @@ def Grow(snake, direction):
         segment = pygame.Rect(snake.body[-1].x, snake.body[-1].y - blockSize, blockSize, blockSize)
         snake.body.insert(len(snake.body), segment)
 
-def MoveSnake(direction, snake, fruit, draw):
+def MoveSnake(screen, direction, snake, fruit, draw):
 
     if draw:
-        fruit.drawFruit()
+        fruit.drawFruit(screen)
 
     # Moves the head of the snake.
     if direction == "left":
@@ -227,7 +224,6 @@ def PlayerSnakeGame(display):
 
     # Creating the screen.
     background_colour = pygame.Color("#8fcb9e")
-    res = (900, 800)
     screen = pygame.display.set_mode(res)
     pygame.display.set_caption('Snake Game')
     screen.fill(background_colour)
@@ -240,7 +236,7 @@ def PlayerSnakeGame(display):
     fruit = Fruit(0, 0)
     pygame.draw.rect(screen, BLACK, snake.draw())
     fruit.generateFruit()
-    fruit.drawFruit()
+    fruit.drawFruit(screen)
 
     # Head of snake.
     snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
@@ -290,7 +286,7 @@ def PlayerSnakeGame(display):
 
         # This moves the snake at a certain time interval.
         if clock.tick(12):
-            MoveSnake(lastMove, snake, fruit, True)
+            MoveSnake(screen, lastMove, snake, fruit, True)
             pygame.display.update()
 
         # If the snake hit's itself.
@@ -298,19 +294,19 @@ def PlayerSnakeGame(display):
             for parts in snake.body[1:]:
                 if snake.x == parts.x and snake.y == parts.y:
                     if display != 2:
-                        GameOver()
+                        GameOver(screen)
                     else:
                         return score
 
         if snake.x < 20 or snake.x > 860:
             if display != 2:
-                GameOver()
+                GameOver(screen)
             else:
                 return score
 
         if snake.y < 20 or snake.y > 700:
             if display != 2:
-                GameOver()
+                GameOver(screen)
             else:
                 return score
 
@@ -334,7 +330,7 @@ def PlayerSnakeGame(display):
         
         pygame.display.update()
 
-def GameOver():
+def GameOver(screen):
 
     s = pygame.Surface(res)
     s.fill(BLACK)
@@ -393,7 +389,7 @@ def GameOver():
 def SnakeGame(agent, lastMove, fruit):
 
     scored = False
-
+    temp = 0
     # If this is the first run through for the current agent we initilize some variables.
     if len(agent.body) < 1:
 
@@ -410,7 +406,7 @@ def SnakeGame(agent, lastMove, fruit):
         score = 0
 
     # Move the snake in a direction picked by the neural network.
-    MoveSnake(lastMove, agent, fruit, False)
+    MoveSnake(temp, lastMove, agent, fruit, False)
 
     # When you get a fruit it will replace it with another randomly generated fruit.
     # Then it will add one to the score and display it.
@@ -446,6 +442,7 @@ def displayGame(lastMove, agent, fruit, display):
     # Creating the screen.
     global res
     global screen
+    temp = 0
     background_colour = pygame.Color("#8fcb9e")
     snake = Snake(random.randrange(40, 840, 20), random.randrange(40, 680, 20), [])
     res = (900, 800)
@@ -469,7 +466,7 @@ def displayGame(lastMove, agent, fruit, display):
 
     # Generating and drawing the fruit.
     fruit.generateFruit()
-    fruit.drawFruit()
+    fruit.drawFruit(screen)
 
     # Head of snake.
     snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
@@ -538,7 +535,7 @@ def displayGame(lastMove, agent, fruit, display):
                 if lastMove != "up":
                     lastMove = "down"
 
-            MoveSnake(lastMove, snake, fruit, True)
+            MoveSnake(temp, lastMove, snake, fruit, True)
             pygame.display.update()
 
         # When the agent gets a fruit it will replace it with another randomly generated fruit.
@@ -550,7 +547,7 @@ def displayGame(lastMove, agent, fruit, display):
 
             # Generate a new fruit.
             fruit.generateFruit()
-            fruit.drawFruit()
+            fruit.drawFruit(screen)
 
             # Increase score by one.
             score += 1
@@ -1092,15 +1089,15 @@ def AIMenu():
         screen.blit(largeTime, (center[0] + 80, center[1] + 170))
         screen.blit(disclaimer, (center[0] - 360, center[1] + 340))
 
-
         pygame.display.flip()
 
+    pygame.display.quit()
+    screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
     img1 = pygame.image.load("images/training1.png")
     img2 = pygame.image.load("images/training2.png")
     img3 = pygame.image.load("images/training3.png")
 
     trainingText = [img1, img2, img3]
-    screen = pygame.display.set_mode((res[0] + 350, res[1] + 100))
     screen.fill(background_colour)
     screen.blit(pygame.image.load('images/loading3.png'), (center[0] - 30, center[1] - 70))
 
@@ -1189,6 +1186,7 @@ def AIMenu():
     conn1.close()
     conn2.close()
     p1.join()
+    p1.close()
 
     # Finished Training loop.
     while True:
@@ -1198,6 +1196,7 @@ def AIMenu():
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN and menuButton:
+                pygame.display.quit()
                 return MainMenu()
             if event.type == pygame.MOUSEBUTTONDOWN and retrainAgentButton:
                 return AIMenu()
@@ -1281,9 +1280,6 @@ if __name__ == '__main__':
 
     # # Initilizing
     pygame.init()
-
-    # Screen resolution.
-    screen = pygame.display.set_mode(res)
 
     smallerfont = pygame.font.SysFont('Corbel', 20)
     smallfont = pygame.font.SysFont('Corbel',35)
