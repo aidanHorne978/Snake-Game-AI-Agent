@@ -222,7 +222,6 @@ def MoveSnake(screen, direction, snake, fruit, draw):
 
 def PlayerSnakeGame(display):
 
-    # Creating the screen.
     background_colour = pygame.Color("#8fcb9e")
     screen = pygame.display.set_mode(res)
     pygame.display.set_caption('Snake Game')
@@ -245,8 +244,47 @@ def PlayerSnakeGame(display):
     snake.body.append(pygame.Rect(snake.x, snake.y, blockSize, blockSize))
     
     score = 0
-    lastMove = "left"
     switch = True
+    wait = True
+    lastMove = ""
+
+    s = pygame.Surface(res)
+    s.fill(BLACK)
+    s.set_alpha(200)
+    screen.blit(s, (0,0))
+    pygame.display.flip()
+
+    while wait:
+
+        screen.blit(pygame.image.load('images/press-any-key.png'), (center[0] - 325, center[1] - 200))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                    lastMove = "left"
+                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    lastMove = "right"
+                elif event.key == pygame.K_UP or event.key == pygame.K_w:
+                    lastMove = "up"
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    lastMove = "down"
+                else:
+                    lastMove = "left"
+
+                wait = False
+        
+        pygame.display.flip()
+
+    background_colour = pygame.Color("#8fcb9e")
+    screen = pygame.display.set_mode(res)
+    pygame.display.set_caption('Snake Game')
+    screen.fill(background_colour)
+    fruit.drawFruit(screen)
+    DrawGrid(screen)
+    pygame.display.flip()
 
     while True:
 
@@ -258,7 +296,7 @@ def PlayerSnakeGame(display):
             else:
                 screen.blit(pygame.image.load('images/player2.png'), (center[0] - 50, center[1] + 370))
                 switch = True
-            
+
         # Score variable.
         scoreTitle = smallfont.render('score:' , True , BLACK)
         scoreValue = smallfont.render(str(score), True, BLACK)
@@ -294,19 +332,19 @@ def PlayerSnakeGame(display):
             for parts in snake.body[1:]:
                 if snake.x == parts.x and snake.y == parts.y:
                     if display != 2:
-                        GameOver(screen)
+                        GameOverPSG(screen)
                     else:
                         return score
 
         if snake.x < 20 or snake.x > 860:
             if display != 2:
-                GameOver(screen)
+                GameOverPSG(screen)
             else:
                 return score
 
         if snake.y < 20 or snake.y > 700:
             if display != 2:
-                GameOver(screen)
+                GameOverPSG(screen)
             else:
                 return score
 
@@ -330,7 +368,7 @@ def PlayerSnakeGame(display):
         
         pygame.display.update()
 
-def GameOver(screen):
+def GameOverPSG(screen):
 
     s = pygame.Surface(res)
     s.fill(BLACK)
@@ -506,8 +544,9 @@ def displayGame(lastMove, agent, fruit, display):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-            if event.type == pygame.MOUSEBUTTONDOWN and backButton:
-                return
+            if display == 0:
+                if event.type == pygame.MOUSEBUTTONDOWN and backButton:
+                    return
 
         # Score variable.
         scoreTitle = smallfont.render('score:' , True , BLACK)
@@ -891,6 +930,7 @@ def gamemodeScore(agent):
     # Fonts used.
     smallfont = pygame.font.SysFont('Corbel',35)
     bigfont = pygame.font.SysFont('Corbel',70)
+    middlefont = pygame.font.SysFont('Corbel', 55)
 
     # Screen width, height and center
     width = res[0]
@@ -991,10 +1031,44 @@ def gamemodeScore(agent):
     screen.blit(s, (0,0))
     pygame.display.flip()
 
-    if AIscore > playerScore:
-        screen.blit(pygame.image.load('images/agent-wins.png'), (center[0] - 330, center[1] - 300))
-    else:
-        screen.blit(pygame.image.load('images/player-wins.png'), (center[0] - 330, center[1] - 300))
+    while True:
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and playAgainButton:
+                return gamemodeScore(agent)
+            if event.type == pygame.MOUSEBUTTONDOWN and backButton:
+                return
+
+        if AIscore > playerScore:
+            screen.blit(pygame.image.load('images/agent-wins.png'), (center[0] - 300, center[1] - 270))
+        else:
+            screen.blit(pygame.image.load('images/player-wins.png'), (center[0] - 300, center[1] - 270))
+        
+        mouse = pygame.mouse.get_pos()
+
+        playAgain = middlefont.render('play again', True, color)
+        back = smallfont.render('back' , True , color)
+
+        playAgainButton = width / 2 - 140 <= mouse[0] <= width / 2 + 120 and height / 2 - 50 <= mouse[1] <= height / 2 + 70
+        backButton = width / 2 - 102 <= mouse[0] <= width / 2 + 78 and height / 2 + 80 <= mouse[1] <= height / 2 + 140
+
+        if playAgainButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 140,height/2 - 70, 260, 120))
+        else:
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 140,height/2 - 70, 260, 120))
+        
+        if backButton:
+            pygame.draw.rect(screen,color_light,pygame.Rect(width/2 - 102,height/2 + 80, 180, 60))
+        else: 
+            pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 102,height/2 + 80, 180, 60)) 
+
+        screen.blit(playAgain, (center[0] - 120, center[1] - 35))
+        screen.blit(back, (center[0] - 45, center[1] + 95)) 
+
+        pygame.display.flip()
 
 def AIMenu():
     
