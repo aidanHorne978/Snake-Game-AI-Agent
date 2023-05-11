@@ -6,8 +6,6 @@ import random
 import numpy as np
 import time as timer
 from multiprocessing import Pool, Process, Pipe
-from multiprocessing.pool import ThreadPool
-from threading import Thread
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.backends.backend_agg as agg
@@ -315,7 +313,7 @@ def PlayerSnakeGame(display):
                         lastMove = "down"
 
         # This moves the snake at a certain time interval.
-        if clock.tick(12):
+        if clock.tick(8):
             MoveSnake(screen, lastMove, snake, fruit, True, BLACK)
 
         # If the snake hit's itself.
@@ -541,7 +539,7 @@ def displayGame(lastMove, agent, fruit, display):
         screen.blit(scoreValue, (center[0] + 15, center[1] + 330))
 
         # This moves the snake at a certain time interval.
-        if clock.tick(12):
+        if clock.tick(8):
 
             # Uses the trained agent to play the game with it's neural network. (Set to true for debugging).
             move = makeMove(agent, snake, lastMove, fruit)
@@ -974,6 +972,7 @@ def trainGen(connection, steps):
     generation = 0
     group = 2
     size = group * 20
+    counter = 0
 
     # Creating a population of agents.
     population = []
@@ -988,11 +987,11 @@ def trainGen(connection, steps):
         
         # Running the game for every agent in the generation. Run's the agents in size of group with 10 processes.
         newPop = []
-        print(steps)
+
         with Pool() as pool:
-            if steps == "small":
+            if steps == 1000:
                 result = pool.map_async(runAgentSmall, population)
-            elif steps == "medium":
+            elif steps == 2500:
                 result = pool.map_async(runAgentMedium, population)
             else:
                 result = pool.map_async(runAgentLarge, population)
@@ -1010,8 +1009,16 @@ def trainGen(connection, steps):
         connection.send(cFitness)
         currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
 
-        if generation > 75 / 2:
-            population = population[0:30]
+        print(len(population))
+
+        if currentFitness[0][0] > steps * 200:
+            counter += 1
+            if counter >= 5:
+                connection.send(1)
+                connection.send(currentFitness)
+                return
+        else:
+            counter = 0
 
         # # Adding the best 12 agents to the next generation for crossover and mutation.
         for i in range(12):
@@ -1327,7 +1334,7 @@ def gamemodeDeathmatch(agent):
         screen.blit(agentScoreTitle, (center[0] + 225, center[1] + 325))        
 
         # This moves the snake at a certain time interval.
-        if clock.tick(12):
+        if clock.tick(8):
 
             move = makeMove(agent, agentSnake, agentLastMove, fruit)
 
@@ -1452,6 +1459,7 @@ def AIMenu():
     center = (int(width / 2), int(height / 2)) 
 
     counter = 0
+    stepCounter = 0
     choice = True
 
     global numSteps
@@ -1467,13 +1475,13 @@ def AIMenu():
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN and smallButton:
-                numSteps = "small"
+                numSteps = 1000
                 choice = False
             if event.type == pygame.MOUSEBUTTONDOWN and mediumButton:
-                numSteps = "medium"
+                numSteps = 2500
                 choice = False
             if event.type == pygame.MOUSEBUTTONDOWN and largeButton:
-                numSteps = "large"
+                numSteps = 5000
                 choice = False
             if event.type == pygame.MOUSEBUTTONDOWN and backButton:
                 return MainMenu()
@@ -1560,6 +1568,10 @@ def AIMenu():
 
         if generation <= 75:
             fitness = conn1.recv()
+
+            if fitness == 1:
+                break
+
             highest.append(max(fitness))
 
             with matplotlib.pyplot.style.context('ggplot'):
