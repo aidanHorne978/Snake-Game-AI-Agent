@@ -1260,6 +1260,8 @@ def gamemodeDeathmatch(agent):
     # Tail of snake.
     agentSnake.body.append(pygame.Rect(agentSnake.x, agentSnake.y, blockSize, blockSize))
 
+    pygame.display.update()
+
     while wait:
 
         for event in pygame.event.get():
@@ -1459,7 +1461,6 @@ def AIMenu():
     center = (int(width / 2), int(height / 2)) 
 
     counter = 0
-    stepCounter = 0
     choice = True
 
     global numSteps
