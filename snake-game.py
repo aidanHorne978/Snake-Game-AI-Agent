@@ -6,7 +6,6 @@ import random
 import numpy as np
 import time as timer
 from multiprocessing import Pool, Process, Pipe
-from threading import Thread
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.backends.backend_agg as agg
@@ -402,12 +401,14 @@ def GameOverPSG(screen):
             pygame.draw.rect(screen,color_dark,pygame.Rect(width/2 - 190,height/2 - 100, 360, 120)) 
 
         # Draws the "quit" and "start" text.
-        pygame.display.update(screen.blit(quit, (center[0] - 45, center[1] + 60)))
-        pygame.display.update(screen.blit(start, (center[0] - 150, center[1] - 75)))
+        screen.blit(quit, (center[0] - 45, center[1] + 60))
+        screen.blit(start, (center[0] - 150, center[1] - 75))
         
         # Puts the "snake" logo onto the screen.
         logo = pygame.image.load('images/game-over.png').convert_alpha()
-        pygame.display.update(screen.blit(logo, (center[0] - 230, center[1] - 350)))
+        screen.blit(logo, (center[0] - 230, center[1] - 350))
+
+        pygame.display.update()
 
         # updates the frames of the game 
          
@@ -498,7 +499,7 @@ def displayGame(lastMove, agent, fruit, display):
     switch = True
 
     pygame.display.update()
-
+    
     while 1:
 
         mouse = pygame.mouse.get_pos()
