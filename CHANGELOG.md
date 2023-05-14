@@ -1,5 +1,14 @@
 # Snake-Game-AI-Agent
 
+## 15 May 2023:
+ - Finished the project on the 12th of May and have taken a few days off. I dove into this head first and ended up spending 6+ hours a day on it but enjoyed every second.
+ - I changed the small, medium and large buttons to reflect steps instead of generations. This is because it usually takes around 75 generations regardsless of steps to train the generation so doing more / fewer was pointless. This makes it train faster with being a couple seconds for small (1500 steps/generation) and 5 - 6 seconds for large (10,000 steps/generation).
+ - Added in deathmatch which allows you to vs the Agent in the same arena, both fighting for the same fruit. Win conditions are first to make the other run into their body or if one hits the wall they lose.
+ - The current run time isn't too bad with the smaller steps being around 3 minutes and the larger being around 7.
+ - A big problem is how intense it is on my system. It uses all avaliable CPU sometimes maxing out and while talking to a friend on discord he said my voice was cutting out while it was running. I also had Subnautica open while trying to train a generation and it crashed at around generation 30.
+ - The graphics and colour scheme of the project isn't the best, but I don't see myself as the most creative person and definetly had more fun building the genetic algorithm then colouring / positioning buttons.
+ - The actual program is working and I'm happy with it but I might do some research on processes and threads and see if I can get it more responsive in the training process.
+
 ## 9th May 2023:
 
 ### snake-game.py
