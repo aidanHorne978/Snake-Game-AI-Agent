@@ -6,6 +6,7 @@ import random
 import numpy as np
 import time as timer
 from multiprocessing import Pool, Process, Pipe
+from threading import Thread
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.backends.backend_agg as agg
@@ -531,7 +532,7 @@ def displayGame(lastMove, agent, fruit, display):
             if display == 0:
                 if event.type == pygame.MOUSEBUTTONDOWN and backButton:
                     return
-
+                
         # Score variable.
         scoreTitle = smallfont.render('score:' , True , BLACK)
         scoreValue = smallfont.render(str(score), True, BLACK)
@@ -1008,8 +1009,6 @@ def trainGen(connection, steps):
 
         connection.send(cFitness)
         currentFitness = sorted(currentFitness, key=lambda x: x[0], reverse=True)
-
-        print(len(population))
 
         if currentFitness[0][0] > steps * 200:
             counter += 1
@@ -1551,6 +1550,7 @@ def AIMenu():
     generation = 0
 
     conn1, conn2  = Pipe(duplex = False)
+    # p1 = Thread(target = trainGen, args=(conn2, numSteps,))
     p1 = Process(target = trainGen, args=(conn2, numSteps,))
     p1.start()
 
