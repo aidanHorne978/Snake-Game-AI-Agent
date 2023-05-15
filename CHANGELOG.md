@@ -66,6 +66,7 @@ Have recreated the game with the user controlls working and is in repository Sna
 
 Sites that helped:
  - ChatGPT. (Had a lot of conversations with the AI but never copied chunks of code just used it more for the maths).
+ - https://chat.openai.com/c/ad6b46ac-acfa-42c9-8edd-22484cc87343
  - https://davideliu.com/2020/02/03/teaching-ai-to-play-snake-with-genetic-algorithm/
  - https://www.sitepoint.com/python-multiprocessing-parallel-programming/
  - https://www.fontspace.com/snake-holiday-font-f87373
