@@ -56,7 +56,16 @@ Have recreated the game with the user controlls working and is in repository Sna
  - The problem is as I feared. There isn't enough crossover and that means that we don't improve enough to get good results.
  - Will retire this file for now and maybe come back to it later and implement multiprocessing where they can talk to each other but I feel this will be a lot more work than it's worth.
 
+ ## Before April 27th 2023:
+  - I wasn't sure I could finish this project so I never made a changelog but I started the project around the start of April.
+  - I started by creating the snake game which took about 2 weeks. The major challenges I had was working with PyGame for the first time and getting each segment of the snake to follow the last.
+  - I then started tackling the AI and had a lot of issues with the input nodes not working correctly.
+  - Then had issues with the snake getting around the (if left, you can't go right). This was because I was moving around methods to different files and trying to make concise code before it even worked.
+  - Also had problems with the fitness function not rewarding scoring and snakes would flattening out at 0 fitness and not learn how to score they would just value survival. The reason this happened was that the input nodes weren't giving the correct direction of the food and after fixing that the algorithm could connect the input nodes to food position and started working.
+  - I'm writing this on the 15th May 2023, so I don't remember all my challenges but these ones stick out in my mind.
+
 Sites that helped:
+ - ChatGPT. (Had a lot of conversations with the AI but never copied chunks of code just used it more for the maths).
  - https://davideliu.com/2020/02/03/teaching-ai-to-play-snake-with-genetic-algorithm/
  - https://www.sitepoint.com/python-multiprocessing-parallel-programming/
  - https://www.fontspace.com/snake-holiday-font-f87373
